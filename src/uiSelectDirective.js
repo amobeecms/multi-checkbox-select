@@ -318,7 +318,7 @@ uis.directive('uiSelect',
             dropdown[0].style.opacity = 0;
 
             // Delay positioning the dropdown until all choices have been added so its height is correct.
-            $timeout(function(){
+            //$timeout(function(){
 
               if ($select.dropdownPosition === 'up'){
                   //Go UP
@@ -347,7 +347,7 @@ uis.directive('uiSelect',
 
               // Display the dropdown once it has been positioned.
               dropdown[0].style.opacity = 1;
-            });
+            //});
           } else {
               if (dropdown === null || dropdown.length === 0) {
                 return;

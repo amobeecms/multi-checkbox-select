@@ -105,47 +105,32 @@ uis.controller('uiSelectCtrl',
     }
 
   // When the user clicks on ui-select, displays the dropdown list
-  ctrl.activate = function(initSearchValue, avoidReset) {
-    if (!ctrl.disabled  && !ctrl.open) {
-      if(!avoidReset) _resetSearchInput();
+    ctrl.activate = function(initSearchValue, avoidReset) {
+      if (!ctrl.disabled  && !ctrl.open) {
+        if(!avoidReset) _resetSearchInput();
 
-      $scope.$broadcast('uis:activate');
+        $scope.$broadcast('uis:activate');
 
-      ctrl.open = true;
+        ctrl.open = true;
 
-      ctrl.activeIndex = ctrl.activeIndex >= ctrl.items.length ? 0 : ctrl.activeIndex;
+        ctrl.activeIndex = ctrl.activeIndex >= ctrl.items.length ? 0 : ctrl.activeIndex;
 
-      // ensure that the index is set to zero for tagging variants
-      // that where first option is auto-selected
-      if ( ctrl.activeIndex === -1 && ctrl.taggingLabel !== false ) {
-        ctrl.activeIndex = 0;
-      }
+        // ensure that the index is set to zero for tagging variants
+        // that where first option is auto-selected
+        if ( ctrl.activeIndex === -1 && ctrl.taggingLabel !== false ) {
+          ctrl.activeIndex = 0;
+        }
 
-      var container = $element.querySelectorAll('.ui-select-choices-content');
-      if (ctrl.$animate && ctrl.$animate.enabled(container[0])) {
-        ctrl.$animate.on('enter', container[0], function (elem, phase) {
-          if (phase === 'close') {
-            // Only focus input after the animation has finished
-            $timeout(function () {
-              ctrl.focusSearchInput(initSearchValue);
-            });
+        // Give it time to appear before focus
+        $timeout(function() {
+          ctrl.search = initSearchValue || ctrl.search;
+          ctrl.searchInput[0].focus();
+          if(!ctrl.tagging.isActivated && ctrl.items.length > 1) {
+            _ensureHighlightVisible();
           }
         });
-      } else {
-        $timeout(function () {
-          ctrl.focusSearchInput(initSearchValue);
-        });
       }
-    }
-  };
-
-  ctrl.focusSearchInput = function (initSearchValue) {
-    ctrl.search = initSearchValue || ctrl.search;
-    ctrl.searchInput[0].focus();
-    if(!ctrl.tagging.isActivated && ctrl.items.length > 1) {
-     _ensureHighlightVisible();
-    }
-  };
+    };
 
   ctrl.findGroupByName = function(name) {
     return ctrl.groups && ctrl.groups.filter(function(group) {
@@ -233,7 +218,7 @@ uis.controller('uiSelectCtrl',
     };
 
     // See https://github.com/angular/angular.js/blob/v1.2.15/src/ng/directive/ngRepeat.js#L259
-    $scope.$watchCollection(ctrl.parserResult.source, function(items) {
+    $scope.$watchCollection(ctrl.parserResult.source, function(items,oldItems) {
       if (items === undefined || items === null) {
         // If the user specifies undefined or null => reset the collection
         // Special case: items can be undefined if the user did not initialized the collection on the scope
@@ -247,10 +232,12 @@ uis.controller('uiSelectCtrl',
           //TODO Should add a test
           ctrl.refreshItems(items);
           ctrl.ngModel.$modelValue = null; //Force scope model value and ngModel value to be out of sync to re-run formatters
+          if(ctrl.search =="" && items != oldItems) { //don't broadcast the event while searching
+            $scope.$emit('uis:filter');
+          }
         }
       }
     });
-
   };
 
   var _refreshDelayPromise;
