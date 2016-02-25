@@ -1,8 +1,9 @@
 /*!
  * ui-select
  * http://github.com/angular-ui/ui-select
- * Version: 0.14.8 - 2016-02-18T22:01:43.792Z
+ * Version: 0.14.7.1 - 2016-02-18T21:01:36.893Z
  * License: MIT
+ * Forked: Avien
  */
 
 
@@ -175,8 +176,8 @@ var uis = angular.module('ui.select', [])
 }]);
 
 uis.directive('uiSelectChoices',
-  ['uiSelectConfig', 'uisRepeatParser', 'uiSelectMinErr', '$compile', '$window',
-  function(uiSelectConfig, RepeatParser, uiSelectMinErr, $compile, $window) {
+  ['uiSelectConfig', 'uisRepeatParser', 'uiSelectMinErr', '$compile',
+  function(uiSelectConfig, RepeatParser, uiSelectMinErr, $compile) {
 
   return {
     restrict: 'EA',
@@ -221,19 +222,12 @@ uis.directive('uiSelectChoices',
         }
 
         choices.attr('ng-repeat', $select.parserResult.repeatExpression(groupByExp))
-            .attr('ng-if', '$select.open'); //Prevent unnecessary watches when dropdown is closed
-        if ($window.document.addEventListener) {  //crude way to exclude IE8, specifically, which also cannot capture events
-          choices.attr('ng-mouseenter', '$select.setActiveItem('+$select.parserResult.itemName +')')
-              .attr('ng-click', '$select.select(' + $select.parserResult.itemName + ',false,$event)');
-        }
+            .attr('ng-if', '$select.open') //Prevent unnecessary watches when dropdown is closed
+            .attr('ng-click', '$select.select(' + $select.parserResult.itemName + ',false,$event)');
 
         var rowsInner = element.querySelectorAll('.ui-select-choices-row-inner');
         if (rowsInner.length !== 1) throw uiSelectMinErr('rows', "Expected 1 .ui-select-choices-row-inner but got '{0}'.", rowsInner.length);
         rowsInner.attr('uis-transclude-append', ''); //Adding uisTranscludeAppend directive to row element after choices element has ngRepeat
-        if (!$window.document.addEventListener) {  //crude way to target IE8, specifically, which also cannot capture events - so event bindings must be here
-          rowsInner.attr('ng-mouseenter', '$select.setActiveItem('+$select.parserResult.itemName +')')
-              .attr('ng-click', '$select.select(' + $select.parserResult.itemName + ',false,$event)');
-        }
 
         $compile(element, transcludeFn)(scope); //Passing current transcludeFn to be able to append elements correctly from uisTranscludeAppend
 
@@ -380,29 +374,14 @@ uis.controller('uiSelectCtrl',
         ctrl.activeIndex = 0;
       }
 
-      var container = $element.querySelectorAll('.ui-select-choices-content');
-      if (ctrl.$animate && ctrl.$animate.enabled(container[0])) {
-        ctrl.$animate.on('enter', container[0], function (elem, phase) {
-          if (phase === 'close') {
-            // Only focus input after the animation has finished
-            $timeout(function () {
-              ctrl.focusSearchInput(initSearchValue);
-            });
-          }
-        });
-      } else {
-        $timeout(function () {
-          ctrl.focusSearchInput(initSearchValue);
-        });
-      }
-    }
-  };
-
-  ctrl.focusSearchInput = function (initSearchValue) {
-    ctrl.search = initSearchValue || ctrl.search;
-    ctrl.searchInput[0].focus();
-    if(!ctrl.tagging.isActivated && ctrl.items.length > 1) {
-     _ensureHighlightVisible();
+      // Give it time to appear before focus
+      $timeout(function() {
+        ctrl.search = initSearchValue || ctrl.search;
+        ctrl.searchInput[0].focus();
+        if(!ctrl.tagging.isActivated && ctrl.items.length > 1) {
+          _ensureHighlightVisible();
+        }
+      });
     }
   };
 
@@ -492,7 +471,7 @@ uis.controller('uiSelectCtrl',
     };
 
     // See https://github.com/angular/angular.js/blob/v1.2.15/src/ng/directive/ngRepeat.js#L259
-    $scope.$watchCollection(ctrl.parserResult.source, function(items) {
+    $scope.$watchCollection(ctrl.parserResult.source, function(items,oldItems) {
       if (items === undefined || items === null) {
         // If the user specifies undefined or null => reset the collection
         // Special case: items can be undefined if the user did not initialized the collection on the scope
@@ -506,6 +485,9 @@ uis.controller('uiSelectCtrl',
           //TODO Should add a test
           ctrl.refreshItems(items);
           ctrl.ngModel.$modelValue = null; //Force scope model value and ngModel value to be out of sync to re-run formatters
+          if(ctrl.search =="" && items != oldItems) { //don't broadcast the event while searching
+              $scope.$emit('uis:filter');
+          }
         }
       }
     });
@@ -749,11 +731,6 @@ uis.controller('uiSelectCtrl',
   ctrl.searchInput.on('keydown', function(e) {
 
     var key = e.which;
-
-    if (~[KEY.ENTER,KEY.ESC].indexOf(key)){
-      e.preventDefault();
-      e.stopPropagation();
-    }
 
     // if(~[KEY.ESC,KEY.TAB].indexOf(key)){
     //   //TODO: SEGURO?
@@ -1144,9 +1121,6 @@ uis.directive('uiSelect',
           element[0].style.left = '';
           element[0].style.top = '';
           element[0].style.width = originalWidth;
-
-          // Set focus back on to the moved element
-          $select.setFocus();
         }
 
         // Hold on to a reference to the .ui-select-dropdown element for direction support.
@@ -1197,7 +1171,7 @@ uis.directive('uiSelect',
             dropdown[0].style.opacity = 0;
 
             // Delay positioning the dropdown until all choices have been added so its height is correct.
-            $timeout(function(){
+            //$timeout(function(){
 
               if ($select.dropdownPosition === 'up'){
                   //Go UP
@@ -1226,7 +1200,7 @@ uis.directive('uiSelect',
 
               // Display the dropdown once it has been positioned.
               dropdown[0].style.opacity = 1;
-            });
+            //});
           } else {
               if (dropdown === null || dropdown.length === 0) {
                 return;
@@ -1290,10 +1264,7 @@ uis.directive('uiSelectMultiple', ['uiSelectMinErr','$timeout', function(uiSelec
           $select = $scope.$select,
           ngModel;
 
-      if (angular.isUndefined($select.selected))
-        $select.selected = [];
-
-      //Wait for link fn to inject it
+      //Wait for link fn to inject it 
       $scope.$evalAsync(function(){ ngModel = $scope.ngModel; });
 
       ctrl.activeMatchIndex = -1;
@@ -1305,7 +1276,7 @@ uis.directive('uiSelectMultiple', ['uiSelectMinErr','$timeout', function(uiSelec
 
       ctrl.refreshComponent = function(){
         //Remove already selected items
-        //e.g. When user clicks on a selection, the selected array changes and
+        //e.g. When user clicks on a selection, the selected array changes and 
         //the dropdown should remove that item
         $select.refreshItems();
         $select.sizeSearchInput();
@@ -1407,7 +1378,7 @@ uis.directive('uiSelectMultiple', ['uiSelectMinErr','$timeout', function(uiSelec
         };
         if (!inputValue) return resultMultiple; //If ngModel was undefined
         for (var k = inputValue.length - 1; k >= 0; k--) {
-          //Check model array of currently selected items
+          //Check model array of currently selected items 
           if (!checkFnMultiple($select.selected, inputValue[k])){
             //Check model array of all items available
             if (!checkFnMultiple(data, inputValue[k])){
@@ -1418,8 +1389,8 @@ uis.directive('uiSelectMultiple', ['uiSelectMinErr','$timeout', function(uiSelec
         }
         return resultMultiple;
       });
-
-      //Watch for external model changes
+      
+      //Watch for external model changes 
       scope.$watchCollection(function(){ return ngModel.$modelValue; }, function(newValue, oldValue) {
         if (oldValue != newValue){
           ngModel.$modelValue = null; //Force scope model value and ngModel value to be out of sync to re-run formatters
