@@ -1,7 +1,7 @@
 {
-  "name": "ui-select",
+  "name": "multi-checkbox-select",
   "main": "./index.js",
-  "author": "http://github.com/angular-ui/ui-select/graphs/contributors",
+  "author": "Avien",
   "homepage": "http://github.com/angular-ui/ui-select",
   "repository": {
     "url": "git://github.com/angular-ui/ui-select.git"
