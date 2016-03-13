@@ -101,9 +101,9 @@
 
   var latestId = 0;
 
-  var uis = angular.module('ui.select', [])
+  var uis = angular.module('multi-checkbox-select', [])
 
-      .constant('uiSelectConfig', {
+      .constant('uiCheckboxSelectConfig', {
         theme: 'bootstrap',
         searchEnabled: true,
         sortable: false,
@@ -119,7 +119,7 @@
 
       // See Rename minErr and make it accessible from outside https://github.com/angular/angular.js/issues/6913
       .service('uiSelectMinErr', function() {
-        var minErr = angular.$$minErr('ui.select');
+        var minErr = angular.$$minErr('multi-checkbox-select');
         return function() {
           var error = minErr.apply(this, arguments);
           var message = error.message.replace(new RegExp('\nhttp://errors.angularjs.org/.*'), '');
@@ -128,7 +128,7 @@
       })
 
       // Recreates old behavior of ng-transclude. Used internally.
-      .directive('uisTranscludeAppend', function () {
+      .directive('uiscbTranscludeAppend', function () {
         return {
           link: function (scope, element, attrs, ctrl, transclude) {
             transclude(scope, function (clone) {
@@ -150,7 +150,7 @@
         }
 
         return function(matchItem, query) {
-          return query && matchItem ? ('' + matchItem).replace(new RegExp(escapeRegexp(query), 'gi'), '<span class="ui-select-highlight">$&</span>') : matchItem;
+          return query && matchItem ? ('' + matchItem).replace(new RegExp(escapeRegexp(query), 'gi'), '<span class="ui-checkbox-select-highlight">$&</span>') : matchItem;
         };
       })
 
@@ -175,22 +175,22 @@
               };
             }]);
 
-  uis.directive('uiSelectChoices',
-      ['uiSelectConfig', 'uisRepeatParser', 'uiSelectMinErr', '$compile',
-        function(uiSelectConfig, RepeatParser, uiSelectMinErr, $compile) {
+  uis.directive('uiCheckboxSelectChoices',
+      ['uiCheckboxSelectConfig', 'uiscbRepeatParser', 'uiSelectMinErr', '$compile',
+        function(uiCheckboxSelectConfig, RepeatParser, uiSelectMinErr, $compile) {
 
           return {
             restrict: 'EA',
-            require: '^uiSelect',
+            require: '^uiCheckboxSelect',
             replace: true,
             transclude: true,
             templateUrl: function(tElement) {
               // Needed so the uiSelect can detect the transcluded content
-              tElement.addClass('ui-select-choices');
+              tElement.addClass('ui-checkbox-select-choices');
 
-              // Gets theme attribute from parent (ui-select)
-              var theme = tElement.parent().attr('theme') || uiSelectConfig.theme;
-              return theme + '/choices.tpl.html';
+              // Gets theme attribute from parent (ui-checkbox-select)
+              var theme = tElement.parent().attr('theme') || uiCheckboxSelectConfig.theme;
+              return theme + '/checkbox-choices.tpl.html';
             },
 
             compile: function(tElement, tAttrs) {
@@ -208,28 +208,28 @@
                 $select.disableChoiceExpression = attrs.uiDisableChoice;
                 $select.onHighlightCallback = attrs.onHighlight;
 
-                $select.dropdownPosition = attrs.position ? attrs.position.toLowerCase() : uiSelectConfig.dropdownPosition;
+                $select.dropdownPosition = attrs.position ? attrs.position.toLowerCase() : uiCheckboxSelectConfig.dropdownPosition;
 
                 if(groupByExp) {
-                  var groups = element.querySelectorAll('.ui-select-choices-group');
-                  if (groups.length !== 1) throw uiSelectMinErr('rows', "Expected 1 .ui-select-choices-group but got '{0}'.", groups.length);
+                  var groups = element.querySelectorAll('.ui-checkbox-select-choices-group');
+                  if (groups.length !== 1) throw uiSelectMinErr('rows', "Expected 1 .ui-checkbox-select-choices-group but got '{0}'.", groups.length);
                   groups.attr('ng-repeat', RepeatParser.getGroupNgRepeatExpression());
                 }
 
-                var choices = element.querySelectorAll('.ui-select-choices-row');
+                var choices = element.querySelectorAll('.ui-checkbox-select-choices-row');
                 if (choices.length !== 1) {
-                  throw uiSelectMinErr('rows', "Expected 1 .ui-select-choices-row but got '{0}'.", choices.length);
+                  throw uiSelectMinErr('rows', "Expected 1 .ui-checkbox-select-choices-row but got '{0}'.", choices.length);
                 }
 
                 choices.attr('ng-repeat', $select.parserResult.repeatExpression(groupByExp))
                     .attr('ng-if', '$select.open') //Prevent unnecessary watches when dropdown is closed
                     .attr('ng-click', '$select.select(' + $select.parserResult.itemName + ',false,$event)');
 
-                var rowsInner = element.querySelectorAll('.ui-select-choices-row-inner');
-                if (rowsInner.length !== 1) throw uiSelectMinErr('rows', "Expected 1 .ui-select-choices-row-inner but got '{0}'.", rowsInner.length);
-                rowsInner.attr('uis-transclude-append', ''); //Adding uisTranscludeAppend directive to row element after choices element has ngRepeat
+                var rowsInner = element.querySelectorAll('.ui-checkbox-select-choices-row-inner');
+                if (rowsInner.length !== 1) throw uiSelectMinErr('rows', "Expected 1 .ui-checkbox-select-choices-row-inner but got '{0}'.", rowsInner.length);
+                rowsInner.attr('uiscb-transclude-append', ''); //Adding uiscbTranscludeAppend directive to row element after choices element has ngRepeat
 
-                $compile(element, transcludeFn)(scope); //Passing current transcludeFn to be able to append elements correctly from uisTranscludeAppend
+                $compile(element, transcludeFn)(scope); //Passing current transcludeFn to be able to append elements correctly from uiscbTranscludeAppend
 
 
                 if($select.multiple) {
@@ -250,7 +250,7 @@
                 attrs.$observe('refreshDelay', function() {
                   // $eval() is needed otherwise we get a string instead of a number
                   var refreshDelay = scope.$eval(attrs.refreshDelay);
-                  $select.refreshDelay = refreshDelay !== undefined ? refreshDelay : uiSelectConfig.refreshDelay;
+                  $select.refreshDelay = refreshDelay !== undefined ? refreshDelay : uiCheckboxSelectConfig.refreshDelay;
                 });
               };
             }
@@ -258,24 +258,24 @@
         }]);
 
   /**
-   * Contains ui-select "intelligence".
+   * Contains ui-checkbox-select "intelligence".
    *
    * The goal is to limit dependency on the DOM whenever possible and
    * put as much logic in the controller (instead of the link functions) as possible so it can be easily tested.
    */
-  uis.controller('uiSelectCtrl',
-      ['$scope', '$element', '$timeout', '$filter', 'uisRepeatParser', 'uiSelectMinErr', 'uiSelectConfig', '$parse', '$injector',
-        function($scope, $element, $timeout, $filter, RepeatParser, uiSelectMinErr, uiSelectConfig, $parse, $injector) {
+  uis.controller('uiCheckboxSelectCtrl',
+      ['$scope', '$element', '$timeout', '$filter', 'uiscbRepeatParser', 'uiSelectMinErr', 'uiCheckboxSelectConfig', '$parse', '$injector',
+        function($scope, $element, $timeout, $filter, RepeatParser, uiSelectMinErr, uiCheckboxSelectConfig, $parse, $injector) {
 
           var ctrl = this;
 
           var EMPTY_SEARCH = '';
 
-          ctrl.placeholder = uiSelectConfig.placeholder;
-          ctrl.searchEnabled = uiSelectConfig.searchEnabled;
-          ctrl.sortable = uiSelectConfig.sortable;
-          ctrl.refreshDelay = uiSelectConfig.refreshDelay;
-          ctrl.paste = uiSelectConfig.paste;
+          ctrl.placeholder = uiCheckboxSelectConfig.placeholder;
+          ctrl.searchEnabled = uiCheckboxSelectConfig.searchEnabled;
+          ctrl.sortable = uiCheckboxSelectConfig.sortable;
+          ctrl.refreshDelay = uiCheckboxSelectConfig.refreshDelay;
+          ctrl.paste = uiCheckboxSelectConfig.paste;
 
           ctrl.removeSelected = false; //If selected item(s) should be removed from dropdown list
           ctrl.closeOnSelect = true; //Initialized inside uiSelect directive link function
@@ -294,10 +294,10 @@
           ctrl.focusser = undefined; //Reference to input element used to handle focus events
           ctrl.resetSearchInput = true;
           ctrl.multiple = undefined; // Initialized inside uiSelect directive link function
-          ctrl.disableChoiceExpression = undefined; // Initialized inside uiSelectChoices directive link function
+          ctrl.disableChoiceExpression = undefined; // Initialized inside uiCheckboxSelectChoices directive link function
           ctrl.tagging = {isActivated: false, fct: undefined};
           ctrl.taggingTokens = {isActivated: false, tokens: undefined};
-          ctrl.lockChoiceExpression = undefined; // Initialized inside uiSelectMatch directive link function
+          ctrl.lockChoiceExpression = undefined; // Initialized inside uiCheckboxSelectMatch directive link function
           ctrl.clickTriggeredSelect = false;
           ctrl.$filter = $filter;
 
@@ -311,9 +311,9 @@
             }
           })();
 
-          ctrl.searchInput = $element.querySelectorAll('input.ui-select-search');
+          ctrl.searchInput = $element.querySelectorAll('input.ui-checkbox-select-search');
           if (ctrl.searchInput.length !== 1) {
-            throw uiSelectMinErr('searchInput', "Expected 1 input.ui-select-search but got '{0}'.", ctrl.searchInput.length);
+            throw uiSelectMinErr('searchInput', "Expected 1 input.ui-checkbox-select-search but got '{0}'.", ctrl.searchInput.length);
           }
 
           ctrl.isEmpty = function() {
@@ -340,7 +340,7 @@
 
           // Most of the time the user does not want to empty the search input when in typeahead mode
           function _resetSearchInput() {
-            if (ctrl.resetSearchInput || (ctrl.resetSearchInput === undefined && uiSelectConfig.resetSearchInput)) {
+            if (ctrl.resetSearchInput || (ctrl.resetSearchInput === undefined && uiCheckboxSelectConfig.resetSearchInput)) {
               ctrl.search = EMPTY_SEARCH;
               //reset activeIndex
               if (ctrl.selected && ctrl.items.length && !ctrl.multiple) {
@@ -363,7 +363,7 @@
             return result;
           }
 
-          // When the user clicks on ui-select, displays the dropdown list
+          // When the user clicks on ui-checkbox-select, displays the dropdown list
           ctrl.activate = function(initSearchValue, avoidReset) {
             if (!ctrl.disabled  && !ctrl.open) {
               if(!avoidReset) _resetSearchInput();
@@ -505,7 +505,7 @@
           /**
            * Typeahead mode: lets the user refresh the collection using his own function.
            *
-           * See Expose $select.search for external / remote filtering https://github.com/angular-ui/ui-select/pull/31
+           * See Expose $select.search for external / remote filtering https://github.com/angular-ui/ui-checkbox-select/pull/31
            */
           ctrl.refresh = function(refreshAttr) {
             if (refreshAttr !== undefined) {
@@ -830,10 +830,10 @@
 
           // See https://github.com/ivaynberg/select2/blob/3.4.6/select2.js#L1431
           function _ensureHighlightVisible() {
-            var container = $element.querySelectorAll('.ui-select-choices-content');
-            var choices = container.querySelectorAll('.ui-select-choices-row');
+            var container = $element.querySelectorAll('.ui-checkbox-select-choices-content');
+            var choices = container.querySelectorAll('.ui-checkbox-select-choices-row');
             if (choices.length < 1) {
-              throw uiSelectMinErr('choices', "Expected multiple .ui-select-choices-row but got '{0}'.", choices.length);
+              throw uiSelectMinErr('choices', "Expected multiple .ui-checkbox-select-choices-row but got '{0}'.", choices.length);
             }
 
             if (ctrl.activeIndex < 0) {
@@ -860,22 +860,22 @@
 
         }]);
 
-  uis.directive('uiSelect',
-      ['$document', 'uiSelectConfig', 'uiSelectMinErr', 'uisOffset', '$compile', '$parse', '$timeout',
-        function($document, uiSelectConfig, uiSelectMinErr, uisOffset, $compile, $parse, $timeout) {
+  uis.directive('uiCheckboxSelect',
+      ['$document', 'uiCheckboxSelectConfig', 'uiSelectMinErr', 'uisOffset', '$compile', '$parse', '$timeout',
+        function($document, uiCheckboxSelectConfig, uiSelectMinErr, uisOffset, $compile, $parse, $timeout) {
 
           return {
             restrict: 'EA',
             templateUrl: function(tElement, tAttrs) {
-              var theme = tAttrs.theme || uiSelectConfig.theme;
-              return theme + (angular.isDefined(tAttrs.multiple) ? '/select-multiple.tpl.html' : '/select.tpl.html');
+              var theme = tAttrs.theme || uiCheckboxSelectConfig.theme;
+              return theme + (angular.isDefined(tAttrs.multiple) ? '/checkbox-select-multiple.tpl.html' : '/checkbox-select.tpl.html');
             },
             replace: true,
             transclude: true,
-            require: ['uiSelect', '^ngModel'],
+            require: ['uiCheckboxSelect', '^ngModel'],
             scope: true,
 
-            controller: 'uiSelectCtrl',
+            controller: 'uiCheckboxSelectCtrl',
             controllerAs: '$select',
             compile: function(tElement, tAttrs) {
 
@@ -889,19 +889,19 @@
 
               //Multiple or Single depending if multiple attribute presence
               if (angular.isDefined(tAttrs.multiple))
-                tElement.append('<ui-select-multiple/>').removeAttr('multiple');
+                tElement.append('<ui-checkbox-select-multiple/>').removeAttr('multiple');
               else
-                tElement.append('<ui-select-single/>');
+                tElement.append('<ui-checkbox-select-single/>');
 
               if (tAttrs.inputId)
-                tElement.querySelectorAll('input.ui-select-search')[0].id = tAttrs.inputId;
+                tElement.querySelectorAll('input.ui-checkbox-select-search')[0].id = tAttrs.inputId;
 
               return function(scope, element, attrs, ctrls, transcludeFn) {
 
                 var $select = ctrls[0];
                 var ngModel = ctrls[1];
 
-                $select.generatedId = uiSelectConfig.generateId();
+                $select.generatedId = uiCheckboxSelectConfig.generateId();
                 $select.baseTitle = attrs.title || 'Select box';
                 $select.focusserTitle = $select.baseTitle + ' focus';
                 $select.focusserId = 'focusser-' + $select.generatedId;
@@ -910,7 +910,7 @@
                   if (angular.isDefined(attrs.closeOnSelect)) {
                     return $parse(attrs.closeOnSelect)();
                   } else {
-                    return uiSelectConfig.closeOnSelect;
+                    return uiCheckboxSelectConfig.closeOnSelect;
                   }
                 }();
 
@@ -920,7 +920,7 @@
                 //Limit the number of selections allowed
                 $select.limit = (angular.isDefined(attrs.limit)) ? parseInt(attrs.limit, 10) : undefined;
 
-                //Set reference to ngModel from uiSelectCtrl
+                //Set reference to ngModel from uiCheckboxSelectCtrl
                 $select.ngModel = ngModel;
 
                 $select.choiceGrouped = function(group){
@@ -936,12 +936,12 @@
 
                 scope.$watch('searchEnabled', function() {
                   var searchEnabled = scope.$eval(attrs.searchEnabled);
-                  $select.searchEnabled = searchEnabled !== undefined ? searchEnabled : uiSelectConfig.searchEnabled;
+                  $select.searchEnabled = searchEnabled !== undefined ? searchEnabled : uiCheckboxSelectConfig.searchEnabled;
                 });
 
                 scope.$watch('sortable', function() {
                   var sortable = scope.$eval(attrs.sortable);
-                  $select.sortable = sortable !== undefined ? sortable : uiSelectConfig.sortable;
+                  $select.sortable = sortable !== undefined ? sortable : uiCheckboxSelectConfig.sortable;
                 });
 
                 attrs.$observe('disabled', function() {
@@ -1026,8 +1026,8 @@
                   if (!contains && !$select.clickTriggeredSelect) {
                     //Will lose focus only with certain targets
                     var focusableControls = ['input','button','textarea','select'];
-                    var targetController = angular.element(e.target).controller('uiSelect'); //To check if target is other ui-select
-                    var skipFocusser = targetController && targetController !== $select; //To check if target is other ui-select
+                    var targetController = angular.element(e.target).controller('uiCheckboxSelect'); //To check if target is other ui-checkbox-select
+                    var skipFocusser = targetController && targetController !== $select; //To check if target is other ui-checkbox-select
                     if (!skipFocusser) skipFocusser =  ~focusableControls.indexOf(e.target.tagName.toLowerCase()); //Check if target is input, button or textarea
                     $select.close(skipFocusser);
                     scope.$digest();
@@ -1051,26 +1051,26 @@
                   // instead of creating a hackish DOM element:
                   var transcluded = angular.element('<div>').append(clone);
 
-                  var transcludedMatch = transcluded.querySelectorAll('.ui-select-match');
-                  transcludedMatch.removeAttr('ui-select-match'); //To avoid loop in case directive as attr
-                  transcludedMatch.removeAttr('data-ui-select-match'); // Properly handle HTML5 data-attributes
+                  var transcludedMatch = transcluded.querySelectorAll('.ui-checkbox-select-match');
+                  transcludedMatch.removeAttr('ui-checkbox-select-match'); //To avoid loop in case directive as attr
+                  transcludedMatch.removeAttr('data-ui-checkbox-select-match'); // Properly handle HTML5 data-attributes
                   if (transcludedMatch.length !== 1) {
-                    throw uiSelectMinErr('transcluded', "Expected 1 .ui-select-match but got '{0}'.", transcludedMatch.length);
+                    throw uiSelectMinErr('transcluded', "Expected 1 .ui-checkbox-select-match but got '{0}'.", transcludedMatch.length);
                   }
-                  element.querySelectorAll('.ui-select-match').replaceWith(transcludedMatch);
+                  element.querySelectorAll('.ui-checkbox-select-match').replaceWith(transcludedMatch);
 
-                  var transcludedChoices = transcluded.querySelectorAll('.ui-select-choices');
-                  transcludedChoices.removeAttr('ui-select-choices'); //To avoid loop in case directive as attr
-                  transcludedChoices.removeAttr('data-ui-select-choices'); // Properly handle HTML5 data-attributes
+                  var transcludedChoices = transcluded.querySelectorAll('.ui-checkbox-select-choices');
+                  transcludedChoices.removeAttr('ui-checkbox-select-choices'); //To avoid loop in case directive as attr
+                  transcludedChoices.removeAttr('data-ui-checkbox-select-choices'); // Properly handle HTML5 data-attributes
                   if (transcludedChoices.length !== 1) {
-                    throw uiSelectMinErr('transcluded', "Expected 1 .ui-select-choices but got '{0}'.", transcludedChoices.length);
+                    throw uiSelectMinErr('transcluded', "Expected 1 .ui-checkbox-select-choices but got '{0}'.", transcludedChoices.length);
                   }
-                  element.querySelectorAll('.ui-select-choices').replaceWith(transcludedChoices);
+                  element.querySelectorAll('.ui-checkbox-select-choices').replaceWith(transcludedChoices);
                 });
 
                 // Support for appending the select field to the body when its open
                 var appendToBody = scope.$eval(attrs.appendToBody);
-                if (appendToBody !== undefined ? appendToBody : uiSelectConfig.appendToBody) {
+                if (appendToBody !== undefined ? appendToBody : uiCheckboxSelectConfig.appendToBody) {
                   scope.$watch('$select.open', function(isOpen) {
                     if (isOpen) {
                       positionDropdown();
@@ -1086,7 +1086,7 @@
                   });
                 }
 
-                // Hold on to a reference to the .ui-select-container element for appendToBody support
+                // Hold on to a reference to the .ui-checkbox-select-container element for appendToBody support
                 var placeholder = null,
                     originalWidth = '';
 
@@ -1095,7 +1095,7 @@
                   var offset = uisOffset(element);
 
                   // Clone the element into a placeholder element to take its original place in the DOM
-                  placeholder = angular.element('<div class="ui-select-placeholder"></div>');
+                  placeholder = angular.element('<div class="ui-checkbox-select-placeholder"></div>');
                   placeholder[0].style.width = offset.width + 'px';
                   placeholder[0].style.height = offset.height + 'px';
                   element.after(placeholder);
@@ -1129,7 +1129,7 @@
                   element[0].style.width = originalWidth;
                 }
 
-                // Hold on to a reference to the .ui-select-dropdown element for direction support.
+                // Hold on to a reference to the .ui-checkbox-select-dropdown element for direction support.
                 var dropdown = null,
                     directionUpClassName = 'direction-up';
 
@@ -1168,7 +1168,7 @@
                 scope.calculateDropdownPos = function(){
 
                   if ($select.open) {
-                    dropdown = angular.element(element).querySelectorAll('.ui-select-dropdown');
+                    dropdown = angular.element(element).querySelectorAll('.ui-checkbox-select-dropdown');
                     if (dropdown.length === 0) {
                       return;
                     }
@@ -1223,25 +1223,25 @@
           };
         }]);
 
-  uis.directive('uiSelectMatch', ['uiSelectConfig', function(uiSelectConfig) {
+  uis.directive('uiCheckboxSelectMatch', ['uiCheckboxSelectConfig', function(uiCheckboxSelectConfig) {
     return {
       restrict: 'EA',
-      require: '^uiSelect',
+      require: '^uiCheckboxSelect',
       replace: true,
       transclude: true,
       templateUrl: function(tElement) {
         // Needed so the uiSelect can detect the transcluded content
-        tElement.addClass('ui-select-match');
+        tElement.addClass('ui-checkbox-select-match');
 
-        // Gets theme attribute from parent (ui-select)
-        var theme = tElement.parent().attr('theme') || uiSelectConfig.theme;
+        // Gets theme attribute from parent (ui-checkbox-select)
+        var theme = tElement.parent().attr('theme') || uiCheckboxSelectConfig.theme;
         var multi = tElement.parent().attr('multiple');
-        return theme + (multi ? '/match-multiple.tpl.html' : '/match.tpl.html');
+        return theme + (multi ? '/checkbox-match-multiple.tpl.html' : '/checkbox-match.tpl.html');
       },
       link: function(scope, element, attrs, $select) {
         $select.lockChoiceExpression = attrs.uiLockChoice;
         attrs.$observe('placeholder', function(placeholder) {
-          $select.placeholder = placeholder !== undefined ? placeholder : uiSelectConfig.placeholder;
+          $select.placeholder = placeholder !== undefined ? placeholder : uiCheckboxSelectConfig.placeholder;
         });
 
         function setAllowClear(allow) {
@@ -1259,10 +1259,10 @@
     };
   }]);
 
-  uis.directive('uiSelectMultiple', ['uiSelectMinErr','$timeout', function(uiSelectMinErr, $timeout) {
+  uis.directive('uiCheckboxSelectMultiple', ['uiSelectMinErr','$timeout', function(uiSelectMinErr, $timeout) {
     return {
       restrict: 'EA',
-      require: ['^uiSelect', '^ngModel'],
+      require: ['^uiCheckboxSelect', '^ngModel'],
 
       controller: ['$scope','$timeout', function($scope, $timeout){
 
@@ -1671,10 +1671,10 @@
     };
   }]);
 
-  uis.directive('uiSelectSingle', ['$timeout','$compile', function($timeout, $compile) {
+  uis.directive('uiCheckboxSelectSingle', ['$timeout','$compile', function($timeout, $compile) {
     return {
       restrict: 'EA',
-      require: ['^uiSelect', '^ngModel'],
+      require: ['^uiCheckboxSelect', '^ngModel'],
       link: function(scope, element, attrs, ctrls) {
 
         var $select = ctrls[0];
@@ -1738,7 +1738,7 @@
         });
 
         //Idea from: https://github.com/ivaynberg/select2/blob/79b5bf6db918d7560bdd959109b7bcfb47edaf43/select2.js#L1954
-        var focusser = angular.element("<input ng-disabled='$select.disabled' class='ui-select-focusser ui-select-offscreen' type='text' id='{{ $select.focusserId }}' aria-label='{{ $select.focusserTitle }}' aria-haspopup='true' role='button' />");
+        var focusser = angular.element("<input ng-disabled='$select.disabled' class='ui-checkbox-select-focusser ui-checkbox-select-offscreen' type='text' id='{{ $select.focusserId }}' aria-label='{{ $select.focusserTitle }}' aria-haspopup='true' role='button' />");
         $compile(focusser)(scope);
         $select.focusser = focusser;
 
@@ -1796,18 +1796,18 @@
     };
   }]);
 // Make multiple matches sortable
-  uis.directive('uiSelectSort', ['$timeout', 'uiSelectConfig', 'uiSelectMinErr', function($timeout, uiSelectConfig, uiSelectMinErr) {
+  uis.directive('uiCheckboxSelectSort', ['$timeout', 'uiCheckboxSelectConfig', 'uiSelectMinErr', function($timeout, uiCheckboxSelectConfig, uiSelectMinErr) {
     return {
-      require: '^^uiSelect',
+      require: '^^uiCheckboxSelect',
       link: function(scope, element, attrs, $select) {
-        if (scope[attrs.uiSelectSort] === null) {
+        if (scope[attrs.uiCheckboxSelectSort] === null) {
           throw uiSelectMinErr('sort', 'Expected a list to sort');
         }
 
         var options = angular.extend({
               axis: 'horizontal'
             },
-            scope.$eval(attrs.uiSelectSortOptions));
+            scope.$eval(attrs.uiCheckboxSelectSortOptions));
 
         var axis = options.axis;
         var draggingClassName = 'dragging';
@@ -1870,7 +1870,7 @@
         };
 
         var _dropHandler = function(droppedItemIndex) {
-          var theList = scope.$eval(attrs.uiSelectSort);
+          var theList = scope.$eval(attrs.uiCheckboxSelectSort);
           var itemToMove = theList[droppedItemIndex];
           var newIndex = null;
 
@@ -1891,7 +1891,7 @@
           move.apply(theList, [droppedItemIndex, newIndex]);
 
           scope.$apply(function() {
-            scope.$emit('uiSelectSort:change', {
+            scope.$emit('uiCheckboxSelectSort:change', {
               array: theList,
               item: itemToMove,
               from: droppedItemIndex,
@@ -1939,10 +1939,10 @@
    * See https://github.com/angular/angular.js/blob/v1.2.15/src/ng/directive/ngRepeat.js#L211
    *
    * Original discussion about parsing "repeat" attribute instead of fully relying on ng-repeat:
-   * https://github.com/angular-ui/ui-select/commit/5dd63ad#commitcomment-5504697
+   * https://github.com/angular-ui/ui-checkbox-select/commit/5dd63ad#commitcomment-5504697
    */
 
-  uis.service('uisRepeatParser', ['uiSelectMinErr','$parse', function(uiSelectMinErr, $parse) {
+  uis.service('uiscbRepeatParser', ['uiSelectMinErr','$parse', function(uiSelectMinErr, $parse) {
     var self = this;
 
     /**
@@ -2007,16 +2007,16 @@
   }]);
 
 }());
-angular.module("ui.select").run(["$templateCache", function($templateCache) {$templateCache.put("bootstrap/choices.tpl.html","<ul class=\"ui-select-choices ui-select-choices-content ui-select-dropdown dropdown-menu\" role=\"listbox\" ng-show=\"$select.items.length > 0\"><li class=\"ui-select-choices-group\" id=\"ui-select-choices-{{ $select.generatedId }}\"><div class=\"divider\" ng-show=\"$select.isGrouped && $index > 0\"></div><div ng-show=\"$select.isGrouped\" class=\"ui-select-choices-group-label dropdown-header\" ng-bind=\"$group.name\"></div><div id=\"ui-select-choices-row-{{ $select.generatedId }}-{{$index}}\" class=\"ui-select-choices-row\" ng-class=\"{active: $select.isActive(this), disabled: $select.isDisabled(this)}\" role=\"option\"><a href=\"\" class=\"ui-select-choices-row-inner\"></a></div></li></ul>");
-  $templateCache.put("bootstrap/match-multiple.tpl.html","<span class=\"ui-select-match\"><span ng-repeat=\"$item in $select.selected\"><span class=\"ui-select-match-item btn btn-default btn-xs\" tabindex=\"-1\" type=\"button\" ng-disabled=\"$select.disabled\" ng-click=\"$selectMultiple.activeMatchIndex = $index;\" ng-class=\"{\'btn-primary\':$selectMultiple.activeMatchIndex === $index, \'select-locked\':$select.isLocked(this, $index)}\" ui-select-sort=\"$select.selected\"><span class=\"close ui-select-match-close\" ng-hide=\"$select.disabled\" ng-click=\"$selectMultiple.removeChoice($index)\">&nbsp;&times;</span> <span uis-transclude-append=\"\"></span></span></span></span>");
-  $templateCache.put("bootstrap/match.tpl.html","<div class=\"ui-select-match\" ng-hide=\"$select.open\" ng-disabled=\"$select.disabled\" ng-class=\"{\'btn-default-focus\':$select.focus}\"><span tabindex=\"-1\" class=\"btn btn-default form-control ui-select-toggle\" aria-label=\"{{ $select.baseTitle }} activate\" ng-disabled=\"$select.disabled\" ng-click=\"$select.activate()\" style=\"outline: 0;\"><span ng-show=\"$select.isEmpty()\" class=\"ui-select-placeholder text-muted\">{{$select.placeholder}}</span> <span ng-hide=\"$select.isEmpty()\" class=\"ui-select-match-text pull-left\" ng-class=\"{\'ui-select-allow-clear\': $select.allowClear && !$select.isEmpty()}\" ng-transclude=\"\"></span> <i class=\"caret pull-right\" ng-click=\"$select.toggle($event)\"></i> <a ng-show=\"$select.allowClear && !$select.isEmpty()\" aria-label=\"{{ $select.baseTitle }} clear\" style=\"margin-right: 10px\" ng-click=\"$select.clear($event)\" class=\"btn btn-xs btn-link pull-right\"><i class=\"glyphicon glyphicon-remove\" aria-hidden=\"true\"></i></a></span></div>");
-  $templateCache.put("bootstrap/select-multiple.tpl.html","<div class=\"ui-select-container ui-select-multiple ui-select-bootstrap dropdown form-control\" ng-class=\"{open: $select.open}\"><div><div class=\"ui-select-match\"></div><input type=\"text\" autocomplete=\"false\" autocorrect=\"off\" autocapitalize=\"off\" spellcheck=\"false\" class=\"ui-select-search input-xs\" placeholder=\"{{$selectMultiple.getPlaceholder()}}\" ng-disabled=\"$select.disabled\" ng-hide=\"$select.disabled\" ng-click=\"$select.activate()\" ng-model=\"$select.search\" role=\"combobox\" aria-label=\"{{ $select.baseTitle }}\" ondrop=\"return false;\"></div><div class=\"ui-select-choices\"></div></div>");
-  $templateCache.put("bootstrap/select.tpl.html","<div class=\"ui-select-container ui-select-bootstrap dropdown\" ng-class=\"{open: $select.open}\"><div class=\"ui-select-match\"></div><input type=\"text\" autocomplete=\"false\" tabindex=\"-1\" aria-expanded=\"true\" aria-label=\"{{ $select.baseTitle }}\" aria-owns=\"ui-select-choices-{{ $select.generatedId }}\" aria-activedescendant=\"ui-select-choices-row-{{ $select.generatedId }}-{{ $select.activeIndex }}\" class=\"form-control ui-select-search\" placeholder=\"{{$select.placeholder}}\" ng-model=\"$select.search\" ng-show=\"$select.searchEnabled && $select.open\"><div class=\"ui-select-choices\"></div></div>");
-  $templateCache.put("select2/choices.tpl.html","<ul class=\"ui-select-choices ui-select-choices-content select2-results\"><li class=\"ui-select-choices-group\" ng-class=\"{\'select2-result-with-children\': $select.choiceGrouped($group) }\"><div ng-show=\"$select.choiceGrouped($group)\" class=\"ui-select-choices-group-label select2-result-label\" ng-bind=\"$group.name\"></div><ul role=\"listbox\" id=\"ui-select-choices-{{ $select.generatedId }}\" ng-class=\"{\'select2-result-sub\': $select.choiceGrouped($group), \'select2-result-single\': !$select.choiceGrouped($group) }\"><li role=\"option\" id=\"ui-select-choices-row-{{ $select.generatedId }}-{{$index}}\" class=\"ui-select-choices-row\" ng-class=\"{\'select2-highlighted\': $select.isActive(this), \'select2-disabled\': $select.isDisabled(this)}\"><div class=\"select2-result-label ui-select-choices-row-inner\"><input type='checkbox' ng-checked='$select.selected.includes($select.parserResult.itemName)'></div></li></ul></li></ul>");
-  $templateCache.put("select2/match-multiple.tpl.html","<span class=\"ui-select-match\"><!--li class=\"ui-select-match-item select2-search-choice\" ng-repeat=\"$item in $select.selected\" ng-class=\"{\'select2-search-choice-focus\':$selectMultiple.activeMatchIndex === $index, \'select2-locked\':$select.isLocked(this, $index)}\" ui-select-sort=\"$select.selected\"><span uis-transclude-append=\"\"></span> <a href=\"javascript:;\" class=\"ui-select-match-close select2-search-choice-close\" ng-click=\"$selectMultiple.removeChoice($index)\" tabindex=\"-1\"></a></li--></span>");
-  $templateCache.put("select2/match.tpl.html","<a class=\"select2-choice ui-select-match\" ng-class=\"{\'select2-default\': $select.isEmpty()}\" ng-click=\"$select.toggle($event)\" aria-label=\"{{ $select.baseTitle }} select\"><span ng-show=\"$select.isEmpty()\" class=\"select2-chosen\">{{$select.placeholder}}</span> <span ng-hide=\"$select.isEmpty()\" class=\"select2-chosen\" ng-transclude=\"\"></span> <abbr ng-if=\"$select.allowClear && !$select.isEmpty()\" class=\"select2-search-choice-close\" ng-click=\"$select.clear($event)\"></abbr> <span class=\"select2-arrow ui-select-toggle\"><b></b></span></a>");
-  $templateCache.put("select2/select-multiple.tpl.html","<div class=\"ui-select-container ui-select-multiple select2 select2-container select2-container-multi\" ng-class=\"{\'select2-container-active select2-dropdown-open open\': $select.open, \'select2-container-disabled\': $select.disabled}\"><ul class=\"select2-choices\"><span class=\"ui-select-match\"></span><li class=\"select2-search-field\"><input type=\"text\" autocomplete=\"false\" autocorrect=\"off\" autocapitalize=\"off\" spellcheck=\"false\" role=\"combobox\" aria-expanded=\"true\" aria-owns=\"ui-select-choices-{{ $select.generatedId }}\" aria-label=\"{{ $select.baseTitle }}\" aria-activedescendant=\"ui-select-choices-row-{{ $select.generatedId }}-{{ $select.activeIndex }}\" class=\"select2-input ui-select-search\" placeholder=\"{{$selectMultiple.getPlaceholder()}}\" ng-disabled=\"$select.disabled\" ng-hide=\"$select.disabled\" ng-model=\"$select.search\" ng-click=\"$select.activate()\" style=\"width: 34px;\" ondrop=\"return false;\"></li></ul><div class=\"ui-select-dropdown select2-drop select2-with-searchbox select2-drop-active\" ng-class=\"{\'select2-display-none\': !$select.open}\"><div class=\"ui-select-choices\"></div></div></div>");
-  $templateCache.put("select2/select.tpl.html","<div class=\"ui-select-container select2 select2-container\" ng-class=\"{\'select2-container-active select2-dropdown-open open\': $select.open, \'select2-container-disabled\': $select.disabled, \'select2-container-active\': $select.focus, \'select2-allowclear\': $select.allowClear && !$select.isEmpty()}\"><div class=\"ui-select-match\"></div><div class=\"ui-select-dropdown select2-drop select2-with-searchbox select2-drop-active\" ng-class=\"{\'select2-display-none\': !$select.open}\"><div class=\"select2-search\" ng-show=\"$select.searchEnabled\"><input type=\"text\" autocomplete=\"false\" autocorrect=\"false\" autocapitalize=\"off\" spellcheck=\"false\" role=\"combobox\" aria-expanded=\"true\" aria-owns=\"ui-select-choices-{{ $select.generatedId }}\" aria-label=\"{{ $select.baseTitle }}\" aria-activedescendant=\"ui-select-choices-row-{{ $select.generatedId }}-{{ $select.activeIndex }}\" class=\"ui-select-search select2-input\" ng-model=\"$select.search\"></div><div class=\"ui-select-choices\"></div></div></div>");
-  $templateCache.put("selectize/choices.tpl.html","<div ng-show=\"$select.open\" class=\"ui-select-choices ui-select-dropdown selectize-dropdown single\"><div class=\"ui-select-choices-content selectize-dropdown-content\"><div class=\"ui-select-choices-group optgroup\" role=\"listbox\"><div ng-show=\"$select.isGrouped\" class=\"ui-select-choices-group-label optgroup-header\" ng-bind=\"$group.name\"></div><div role=\"option\" class=\"ui-select-choices-row\" ng-class=\"{active: $select.isActive(this), disabled: $select.isDisabled(this)}\"><div class=\"option ui-select-choices-row-inner\" data-selectable=\"\"></div></div></div></div></div>");
-  $templateCache.put("selectize/match.tpl.html","<div ng-hide=\"($select.open || $select.isEmpty())\" class=\"ui-select-match\" ng-transclude=\"\"></div>");
-  $templateCache.put("selectize/select.tpl.html","<div class=\"ui-select-container selectize-control single\" ng-class=\"{\'open\': $select.open}\"><div class=\"selectize-input\" ng-class=\"{\'focus\': $select.open, \'disabled\': $select.disabled, \'selectize-focus\' : $select.focus}\" ng-click=\"$select.open && !$select.searchEnabled ? $select.toggle($event) : $select.activate()\"><div class=\"ui-select-match\"></div><input type=\"text\" autocomplete=\"false\" tabindex=\"-1\" class=\"ui-select-search ui-select-toggle\" ng-click=\"$select.toggle($event)\" placeholder=\"{{$select.placeholder}}\" ng-model=\"$select.search\" ng-hide=\"!$select.searchEnabled || ($select.selected && !$select.open)\" ng-disabled=\"$select.disabled\" aria-label=\"{{ $select.baseTitle }}\"></div><div class=\"ui-select-choices\"></div></div>");}]);
+angular.module("multi-checkbox-select").run(["$templateCache", function($templateCache) {$templateCache.put("bootstrap/checkbox-choices.tpl.html","<ul class=\"ui-checkbox-select-choices ui-checkbox-select-choices-content ui-checkbox-select-dropdown dropdown-menu\" role=\"listbox\" ng-show=\"$select.items.length > 0\"><li class=\"ui-checkbox-select-choices-group\" id=\"ui-checkbox-select-choices-{{ $select.generatedId }}\"><div class=\"divider\" ng-show=\"$select.isGrouped && $index > 0\"></div><div ng-show=\"$select.isGrouped\" class=\"ui-checkbox-select-choices-group-label dropdown-header\" ng-bind=\"$group.name\"></div><div id=\"ui-checkbox-select-choices-row-{{ $select.generatedId }}-{{$index}}\" class=\"ui-checkbox-select-choices-row\" ng-class=\"{active: $select.isActive(this), disabled: $select.isDisabled(this)}\" role=\"option\"><a href=\"\" class=\"ui-checkbox-select-choices-row-inner\"></a></div></li></ul>");
+  $templateCache.put("bootstrap/checkbox-match-multiple.tpl.html","<span class=\"ui-checkbox-select-match\"><span ng-repeat=\"$item in $select.selected\"><span class=\"ui-checkbox-select-match-item btn btn-default btn-xs\" tabindex=\"-1\" type=\"button\" ng-disabled=\"$select.disabled\" ng-click=\"$selectMultiple.activeMatchIndex = $index;\" ng-class=\"{\'btn-primary\':$selectMultiple.activeMatchIndex === $index, \'select-locked\':$select.isLocked(this, $index)}\" ui-checkbox-select-sort=\"$select.selected\"><span class=\"close ui-checkbox-select-match-close\" ng-hide=\"$select.disabled\" ng-click=\"$selectMultiple.removeChoice($index)\">&nbsp;&times;</span> <span uiscb-transclude-append=\"\"></span></span></span></span>");
+  $templateCache.put("bootstrap/checkbox-match.tpl.html","<div class=\"ui-checkbox-select-match\" ng-hide=\"$select.open\" ng-disabled=\"$select.disabled\" ng-class=\"{\'btn-default-focus\':$select.focus}\"><span tabindex=\"-1\" class=\"btn btn-default form-control ui-checkbox-select-toggle\" aria-label=\"{{ $select.baseTitle }} activate\" ng-disabled=\"$select.disabled\" ng-click=\"$select.activate()\" style=\"outline: 0;\"><span ng-show=\"$select.isEmpty()\" class=\"ui-checkbox-select-placeholder text-muted\">{{$select.placeholder}}</span> <span ng-hide=\"$select.isEmpty()\" class=\"ui-checkbox-select-match-text pull-left\" ng-class=\"{\'ui-checkbox-select-allow-clear\': $select.allowClear && !$select.isEmpty()}\" ng-transclude=\"\"></span> <i class=\"caret pull-right\" ng-click=\"$select.toggle($event)\"></i> <a ng-show=\"$select.allowClear && !$select.isEmpty()\" aria-label=\"{{ $select.baseTitle }} clear\" style=\"margin-right: 10px\" ng-click=\"$select.clear($event)\" class=\"btn btn-xs btn-link pull-right\"><i class=\"glyphicon glyphicon-remove\" aria-hidden=\"true\"></i></a></span></div>");
+  $templateCache.put("bootstrap/checkbox-select-multiple.tpl.html","<div class=\"ui-checkbox-select-container ui-checkbox-select-multiple ui-checkbox-select-bootstrap dropdown form-control\" ng-class=\"{open: $select.open}\"><div><div class=\"ui-checkbox-select-match\"></div><input type=\"text\" autocomplete=\"false\" autocorrect=\"off\" autocapitalize=\"off\" spellcheck=\"false\" class=\"ui-checkbox-select-search input-xs\" placeholder=\"{{$selectMultiple.getPlaceholder()}}\" ng-disabled=\"$select.disabled\" ng-hide=\"$select.disabled\" ng-click=\"$select.activate()\" ng-model=\"$select.search\" role=\"combobox\" aria-label=\"{{ $select.baseTitle }}\" ondrop=\"return false;\"></div><div class=\"ui-checkbox-select-choices\"></div></div>");
+  $templateCache.put("bootstrap/checkbox-select.tpl.html","<div class=\"ui-checkbox-select-container ui-checkbox-select-bootstrap dropdown\" ng-class=\"{open: $select.open}\"><div class=\"ui-checkbox-select-match\"></div><input type=\"text\" autocomplete=\"false\" tabindex=\"-1\" aria-expanded=\"true\" aria-label=\"{{ $select.baseTitle }}\" aria-owns=\"ui-checkbox-select-choices-{{ $select.generatedId }}\" aria-activedescendant=\"ui-checkbox-select-choices-row-{{ $select.generatedId }}-{{ $select.activeIndex }}\" class=\"form-control ui-checkbox-select-search\" placeholder=\"{{$select.placeholder}}\" ng-model=\"$select.search\" ng-show=\"$select.searchEnabled && $select.open\"><div class=\"ui-checkbox-select-choices\"></div></div>");
+  $templateCache.put("select2/checkbox-choices.tpl.html","<ul class=\"ui-checkbox-select-choices ui-checkbox-select-choices-content select2-results\"><li class=\"ui-checkbox-select-choices-group\" ng-class=\"{\'select2-result-with-children\': $select.choiceGrouped($group) }\"><div ng-show=\"$select.choiceGrouped($group)\" class=\"ui-checkbox-select-choices-group-label select2-result-label\" ng-bind=\"$group.name\"></div><ul role=\"listbox\" id=\"ui-checkbox-select-choices-{{ $select.generatedId }}\" ng-class=\"{\'select2-result-sub\': $select.choiceGrouped($group), \'select2-result-single\': !$select.choiceGrouped($group) }\"><li role=\"option\" id=\"ui-checkbox-select-choices-row-{{ $select.generatedId }}-{{$index}}\" class=\"ui-checkbox-select-choices-row\" ng-class=\"{\'select2-highlighted\': $select.isActive(this), \'select2-disabled\': $select.isDisabled(this)}\"><div class=\"select2-result-label ui-checkbox-select-choices-row-inner\"><input type='checkbox' ng-checked='$select.selected.includes($select.parserResult.itemName)'></div></li></ul></li></ul>");
+  $templateCache.put("select2/checkbox-match-multiple.tpl.html","<span class=\"ui-checkbox-select-match\"><!--li class=\"ui-checkbox-select-match-item select2-search-choice\" ng-repeat=\"$item in $select.selected\" ng-class=\"{\'select2-search-choice-focus\':$selectMultiple.activeMatchIndex === $index, \'select2-locked\':$select.isLocked(this, $index)}\" ui-checkbox-select-sort=\"$select.selected\"><span uiscb-transclude-append=\"\"></span> <a href=\"javascript:;\" class=\"ui-checkbox-select-match-close select2-search-choice-close\" ng-click=\"$selectMultiple.removeChoice($index)\" tabindex=\"-1\"></a></li--></span>");
+  $templateCache.put("select2/checkbox-match.tpl.html","<a class=\"select2-choice ui-checkbox-select-match\" ng-class=\"{\'select2-default\': $select.isEmpty()}\" ng-click=\"$select.toggle($event)\" aria-label=\"{{ $select.baseTitle }} select\"><span ng-show=\"$select.isEmpty()\" class=\"select2-chosen\">{{$select.placeholder}}</span> <span ng-hide=\"$select.isEmpty()\" class=\"select2-chosen\" ng-transclude=\"\"></span> <abbr ng-if=\"$select.allowClear && !$select.isEmpty()\" class=\"select2-search-choice-close\" ng-click=\"$select.clear($event)\"></abbr> <span class=\"select2-arrow ui-checkbox-select-toggle\"><b></b></span></a>");
+  $templateCache.put("select2/checkbox-select-multiple.tpl.html","<div class=\"ui-checkbox-select-container ui-checkbox-select-multiple select2 select2-container select2-container-multi\" ng-class=\"{\'select2-container-active select2-dropdown-open open\': $select.open, \'select2-container-disabled\': $select.disabled}\"><ul class=\"select2-choices\"><span class=\"ui-checkbox-select-match\"></span><li class=\"select2-search-field\"><input type=\"text\" autocomplete=\"false\" autocorrect=\"off\" autocapitalize=\"off\" spellcheck=\"false\" role=\"combobox\" aria-expanded=\"true\" aria-owns=\"ui-checkbox-select-choices-{{ $select.generatedId }}\" aria-label=\"{{ $select.baseTitle }}\" aria-activedescendant=\"ui-checkbox-select-choices-row-{{ $select.generatedId }}-{{ $select.activeIndex }}\" class=\"select2-input ui-checkbox-select-search\" placeholder=\"{{$selectMultiple.getPlaceholder()}}\" ng-disabled=\"$select.disabled\" ng-hide=\"$select.disabled\" ng-model=\"$select.search\" ng-click=\"$select.activate()\" style=\"width: 34px;\" ondrop=\"return false;\"></li></ul><div class=\"ui-checkbox-select-dropdown select2-drop select2-with-searchbox select2-drop-active\" ng-class=\"{\'select2-display-none\': !$select.open}\"><div class=\"ui-checkbox-select-choices\"></div></div></div>");
+  $templateCache.put("select2/checkbox-select.tpl.html","<div class=\"ui-checkbox-select-container select2 select2-container\" ng-class=\"{\'select2-container-active select2-dropdown-open open\': $select.open, \'select2-container-disabled\': $select.disabled, \'select2-container-active\': $select.focus, \'select2-allowclear\': $select.allowClear && !$select.isEmpty()}\"><div class=\"ui-checkbox-select-match\"></div><div class=\"ui-checkbox-select-dropdown select2-drop select2-with-searchbox select2-drop-active\" ng-class=\"{\'select2-display-none\': !$select.open}\"><div class=\"select2-search\" ng-show=\"$select.searchEnabled\"><input type=\"text\" autocomplete=\"false\" autocorrect=\"false\" autocapitalize=\"off\" spellcheck=\"false\" role=\"combobox\" aria-expanded=\"true\" aria-owns=\"ui-checkbox-select-choices-{{ $select.generatedId }}\" aria-label=\"{{ $select.baseTitle }}\" aria-activedescendant=\"ui-checkbox-select-choices-row-{{ $select.generatedId }}-{{ $select.activeIndex }}\" class=\"ui-checkbox-select-search select2-input\" ng-model=\"$select.search\"></div><div class=\"ui-checkbox-select-choices\"></div></div></div>");
+  $templateCache.put("selectize/checkbox-choices.tpl.html","<div ng-show=\"$select.open\" class=\"ui-checkbox-select-choices ui-checkbox-select-dropdown selectize-dropdown single\"><div class=\"ui-checkbox-select-choices-content selectize-dropdown-content\"><div class=\"ui-checkbox-select-choices-group optgroup\" role=\"listbox\"><div ng-show=\"$select.isGrouped\" class=\"ui-checkbox-select-choices-group-label optgroup-header\" ng-bind=\"$group.name\"></div><div role=\"option\" class=\"ui-checkbox-select-choices-row\" ng-class=\"{active: $select.isActive(this), disabled: $select.isDisabled(this)}\"><div class=\"option ui-checkbox-select-choices-row-inner\" data-selectable=\"\"></div></div></div></div></div>");
+  $templateCache.put("selectize/checkbox-match.tpl.html","<div ng-hide=\"($select.open || $select.isEmpty())\" class=\"ui-checkbox-select-match\" ng-transclude=\"\"></div>");
+  $templateCache.put("selectize/checkbox-select.tpl.html","<div class=\"ui-checkbox-select-container selectize-control single\" ng-class=\"{\'open\': $select.open}\"><div class=\"selectize-input\" ng-class=\"{\'focus\': $select.open, \'disabled\': $select.disabled, \'selectize-focus\' : $select.focus}\" ng-click=\"$select.open && !$select.searchEnabled ? $select.toggle($event) : $select.activate()\"><div class=\"ui-checkbox-select-match\"></div><input type=\"text\" autocomplete=\"false\" tabindex=\"-1\" class=\"ui-checkbox-select-search ui-checkbox-select-toggle\" ng-click=\"$select.toggle($event)\" placeholder=\"{{$select.placeholder}}\" ng-model=\"$select.search\" ng-hide=\"!$select.searchEnabled || ($select.selected && !$select.open)\" ng-disabled=\"$select.disabled\" aria-label=\"{{ $select.baseTitle }}\"></div><div class=\"ui-checkbox-select-choices\"></div></div>");}]);
