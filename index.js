@@ -1,2 +1,2 @@
 require('./dist/select.js');
-module.exports = 'ui.select';
+module.exports = 'multi-checkbox-select';
