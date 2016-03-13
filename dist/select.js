@@ -101,7 +101,7 @@
 
   var latestId = 0;
 
-  var uis = angular.module('multi-checkbox-select', [])
+  var uiscb = angular.module('multi-checkbox-select', [])
 
       .constant('uiCheckboxSelectConfig', {
         theme: 'bootstrap',
@@ -175,7 +175,7 @@
               };
             }]);
 
-  uis.directive('uiCheckboxSelectChoices',
+  uiscb.directive('uiCheckboxSelectChoices',
       ['uiCheckboxSelectConfig', 'uiscbRepeatParser', 'uiSelectMinErr', '$compile',
         function(uiCheckboxSelectConfig, RepeatParser, uiSelectMinErr, $compile) {
 
@@ -263,7 +263,7 @@
    * The goal is to limit dependency on the DOM whenever possible and
    * put as much logic in the controller (instead of the link functions) as possible so it can be easily tested.
    */
-  uis.controller('uiCheckboxSelectCtrl',
+  uiscb.controller('uiCheckboxSelectCtrl',
       ['$scope', '$element', '$timeout', '$filter', 'uiscbRepeatParser', 'uiSelectMinErr', 'uiCheckboxSelectConfig', '$parse', '$injector',
         function($scope, $element, $timeout, $filter, RepeatParser, uiSelectMinErr, uiCheckboxSelectConfig, $parse, $injector) {
 
@@ -860,7 +860,7 @@
 
         }]);
 
-  uis.directive('uiCheckboxSelect',
+  uiscb.directive('uiCheckboxSelect',
       ['$document', 'uiCheckboxSelectConfig', 'uiSelectMinErr', 'uisOffset', '$compile', '$parse', '$timeout',
         function($document, uiCheckboxSelectConfig, uiSelectMinErr, uisOffset, $compile, $parse, $timeout) {
 
@@ -1223,7 +1223,7 @@
           };
         }]);
 
-  uis.directive('uiCheckboxSelectMatch', ['uiCheckboxSelectConfig', function(uiCheckboxSelectConfig) {
+  uiscb.directive('uiCheckboxSelectMatch', ['uiCheckboxSelectConfig', function(uiCheckboxSelectConfig) {
     return {
       restrict: 'EA',
       require: '^uiCheckboxSelect',
@@ -1259,7 +1259,7 @@
     };
   }]);
 
-  uis.directive('uiCheckboxSelectMultiple', ['uiSelectMinErr','$timeout', function(uiSelectMinErr, $timeout) {
+  uiscb.directive('uiCheckboxSelectMultiple', ['uiSelectMinErr','$timeout', function(uiSelectMinErr, $timeout) {
     return {
       restrict: 'EA',
       require: ['^uiCheckboxSelect', '^ngModel'],
@@ -1671,7 +1671,7 @@
     };
   }]);
 
-  uis.directive('uiCheckboxSelectSingle', ['$timeout','$compile', function($timeout, $compile) {
+  uiscb.directive('uiCheckboxSelectSingle', ['$timeout','$compile', function($timeout, $compile) {
     return {
       restrict: 'EA',
       require: ['^uiCheckboxSelect', '^ngModel'],
@@ -1796,7 +1796,7 @@
     };
   }]);
 // Make multiple matches sortable
-  uis.directive('uiCheckboxSelectSort', ['$timeout', 'uiCheckboxSelectConfig', 'uiSelectMinErr', function($timeout, uiCheckboxSelectConfig, uiSelectMinErr) {
+  uiscb.directive('uiCheckboxSelectSort', ['$timeout', 'uiCheckboxSelectConfig', 'uiSelectMinErr', function($timeout, uiCheckboxSelectConfig, uiSelectMinErr) {
     return {
       require: '^^uiCheckboxSelect',
       link: function(scope, element, attrs, $select) {
@@ -1942,7 +1942,7 @@
    * https://github.com/angular-ui/ui-checkbox-select/commit/5dd63ad#commitcomment-5504697
    */
 
-  uis.service('uiscbRepeatParser', ['uiSelectMinErr','$parse', function(uiSelectMinErr, $parse) {
+  uiscb.service('uiscbRepeatParser', ['uiSelectMinErr','$parse', function(uiSelectMinErr, $parse) {
     var self = this;
 
     /**
