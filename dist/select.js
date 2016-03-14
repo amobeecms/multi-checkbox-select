@@ -232,16 +232,9 @@
                 var cbsInner = rowsInner.querySelectorAll('input[type=checkbox]');
                 cbsInner.attr('ng-checked','$select.selected.includes(' + $select.parserResult.itemName + ')');
 
-                //if($select.multiple) {
-                  let applyElm = element.parent().append("<div style='height:auto;width:100%;float: right'> <button class='btn btn-primary blue-button'>Apply</button></div>")
-                  applyElm.find('button').attr('ng-click','$select.apply()');
-                  $compile(element.parent(), transcludeFn)(scope);
-                //}
-
-                //$compile(element, transcludeFn)(scope); //Passing current transcludeFn to be able to append elements correctly from uiscbTranscludeAppend
-
-
-
+                let applyElm = element.parent().append("<div style='height:auto;width:100%;float: right'> <button class='btn btn-primary blue-button'>Apply</button></div>")
+                applyElm.find('button').attr('ng-click','$select.apply()');
+                $compile(element.parent(), transcludeFn)(scope);
 
                 scope.$watch('$select.search', function(newValue) {
                   if(newValue && !$select.open && $select.multiple) $select.activate(false, true);
@@ -922,7 +915,7 @@
                 }();
 
                 $select.onApplyCallback = $parse(attrs.onApply);
-                
+
                 //Limit the number of selections allowed
                 $select.limit = (angular.isDefined(attrs.limit)) ? parseInt(attrs.limit, 10) : undefined;
 
