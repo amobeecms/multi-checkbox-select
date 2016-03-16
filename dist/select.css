@@ -265,3 +265,14 @@ body > .ui-checkbox-select-bootstrap.open {
 .ui-checkbox-select-container[theme="bootstrap"].direction-up .ui-checkbox-select-dropdown {
     box-shadow: 0 -4px 8px rgba(0, 0, 0, 0.25);
 }
+
+.ui-checkbox-select-choices-apply-button{
+    float: right;
+    padding-top: 5px;
+    height: 30px;
+    line-height: inherit;
+    margin-right: 15px;
+    border: none;
+    color: #ffffff;
+    background-color: #159bb5;
+}
