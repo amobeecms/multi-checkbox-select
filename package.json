@@ -9,7 +9,7 @@
     "url": "git://github.com/Avien/multi-checkbox-select.git"
   },
   "style": "dist/select.css",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "spm": {
     "main": "dist/select.js",
     "output": [
