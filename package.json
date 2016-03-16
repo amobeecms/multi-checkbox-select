@@ -11,15 +11,20 @@
   "style": "dist/select.css",
   "version": "0.0.2",
   "spm": {
-    "main": "dist/select.js",
+    "main": "dist/multi-checkbox-select.js",
     "output": [
-      "dist/select.css"
+      "dist/multi-checkbox-select.css"
     ]
   },
   "license": "MIT",
   "gitHead": "d761acf9f357e3f9852b10aaf61ef3dd828855ff",
-  "_id": "multi-checkbox-select@0.0.1",
-  "_shasum": "1a75d64c1414a06f1e617f3b6248afb4a96a600a",
+  "_id": "multi-checkbox-select@0.0.2",
+  "_shasum": "bbed67ecf13a2211ae1103af8eddb0d0c1cb26e5",
   "_from": "git+https://github.com/Avien/multi-checkbox-select.git",
-  "_resolved": "git+https://github.com/Avien/multi-checkbox-select.git#d761acf9f357e3f9852b10aaf61ef3dd828855ff"
+  "_resolved": "git+https://github.com/Avien/multi-checkbox-select.git#5d9c897e981ca57b55aa908db1ef8033ea37beb6",
+  "bugs": {
+    "url": "https://github.com/Avien/multi-checkbox-select/issues"
+  },
+  "readme": "ERROR: No README data found!"
 }
+
