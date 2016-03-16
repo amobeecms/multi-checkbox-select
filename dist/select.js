@@ -232,7 +232,16 @@
                 var cbsInner = rowsInner.querySelectorAll('input[type=checkbox]');
                 cbsInner.attr('ng-checked','$select.selected.includes(' + $select.parserResult.itemName + ')');
 
-                let applyElm = element.parent().append("<div style='height:auto;width:100%;float: right'> <button class='btn btn-primary blue-button'>Apply</button></div>")
+                let footerElm = element.parent().append("<div></div>");
+                let selectAllElm = footerElm.append("<a>Select All</a>");
+                selectAllElm.find('a').attr('ng-click','$select.selectAll()');
+
+                footerElm.append('<span> / </span>');
+
+                let clearElm = footerElm.append("<a>Clear</a>");
+                clearElm.find('a').eq(1).attr('ng-click','$select.clearAll()');
+
+                let applyElm = footerElm.append("<button class='btn ui-checkbox-select-choices-apply-button'>Apply</button>")
                 applyElm.find('button').attr('ng-click','$select.apply()');
                 $compile(element.parent(), transcludeFn)(scope);
 
@@ -618,6 +627,30 @@
             }
           };
 
+          ctrl.selectAll = function(){
+            let _filteredItems = $parse(this.filteredItems)($scope);
+
+            _filteredItems.forEach(item=>{
+              if(!this.selected.includes(item)) {
+                this.selected.push(item);
+              }
+            })
+
+            this.ngModel.$setViewValue(Date.now());
+          }
+
+          ctrl.clearAll = function(){
+            let _filteredItems = $parse(this.filteredItems)($scope),
+                index;
+
+            _filteredItems.forEach(item=>{
+              index = this.selected.indexOf(item);
+              this.selected.splice(index, 1);
+            });
+
+            this.ngModel.$setViewValue(Date.now());
+          }
+
           ctrl.apply = function(){
             $timeout(function(){
               ctrl.onApplyCallback($scope);
@@ -874,7 +907,6 @@
             transclude: true,
             require: ['uiCheckboxSelect', '^ngModel'],
             scope: true,
-
             controller: 'uiCheckboxSelectCtrl',
             controllerAs: '$select',
             compile: function(tElement, tAttrs) {
@@ -915,6 +947,7 @@
                 }();
 
                 $select.onApplyCallback = $parse(attrs.onApply);
+                $select.filteredItems = attrs.filteredItems;
 
                 //Limit the number of selections allowed
                 $select.limit = (angular.isDefined(attrs.limit)) ? parseInt(attrs.limit, 10) : undefined;
@@ -1276,7 +1309,7 @@
 
         ctrl.updateModel = function(){
           ngModel.$setViewValue(Date.now()); //Set timestamp as a unique string to force changes
-          ctrl.refreshComponent();
+          //ctrl.refreshComponent();
         };
 
         ctrl.refreshComponent = function(){
@@ -1300,7 +1333,7 @@
 
           $select.selected.splice(index, 1);
           ctrl.activeMatchIndex = -1;
-          $select.sizeSearchInput();
+          //$select.sizeSearchInput();
 
           ctrl.updateModel();
 
