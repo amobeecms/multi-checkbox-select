@@ -1,7 +1,7 @@
 /*!
  * multi-checkbox-select
  * https://github.com/Avien/multi-checkbox-select
- * Version: 0.0.1 - 2016-03-13
+ * Version: 0.0.2 - 2016-03-17
  * License: MIT
  * Forked: Avien
  */
@@ -194,7 +194,7 @@
 
 
               if (this.getTextWidth(text + name, '12px arial') + 15 >= maxWidth) {
-                text += '...(And ' + (list.length - counter) + ' more)';
+                text += '... (' + (list.length - counter) + ' more)';
                 return false;
               }
 
@@ -687,8 +687,7 @@
               }
             })
 
-            $scope.$broadcast('uiscb:updateMoel');
-            //this.updateModel();
+            $scope.$broadcast('uiscb:updateModel');
           }
 
           ctrl.clearAll = function(){
@@ -700,8 +699,6 @@
               this.selected.splice(index, 1);
             });
             $scope.$broadcast('uiscb:updateModel');
-
-            //this.ngModel.$setViewValue(Date.now());
           }
 
           ctrl.apply = function(fromReset){
@@ -720,7 +717,7 @@
           // Closes the dropdown
           ctrl.close = function(skipFocusser, isApplied) {
 
-            if(!isApplied){
+            if(!isApplied && ctrl.ngModel.$modelValue != ctrl.initalModel){ //reset if document under was clicked
               $scope.$broadcast('uiscb:reset');
               ctrl.apply(true);
               return;
@@ -732,8 +729,6 @@
             ctrl.open = false;
 
             $scope.$broadcast('uiscb:close', skipFocusser);
-
-
 
             $timeout(function(){
               ctrl.onCloseCallback($scope);
@@ -1389,8 +1384,8 @@
         $scope.$on('uiscb:updateModel',ctrl.updateModel);
 
         $scope.$on('uiscb:reset',function(){
-          $select.selected = $select.initalModel;
-          ctrl.updateModel();
+            $select.selected = $select.initalModel;
+            ctrl.updateModel();
         });
 
 
