@@ -1,7 +1,7 @@
 /*!
  * multi-checkbox-select
  * https://github.com/Avien/multi-checkbox-select
- * Version: 0.0.2 - 2016-03-17
+ * Version: 0.0.1 - 2016-03-13
  * License: MIT
  * Forked: Avien
  */
@@ -101,7 +101,7 @@
 
   var latestId = 0;
 
-  var uiscb = angular.module('multi-checkbox-select', [])
+  var uiscb = angular.module('multi-checkbox-select', ['ui.bootstrap'])
 
       .constant('uiCheckboxSelectConfig', {
         theme: 'bootstrap',
@@ -190,19 +190,21 @@
                 counter = 0;
 
             list.every(item=> {
-              let name = item.name.toLowerCase();
+              let name = item.name;
+              let textWidth = this.getTextWidth(text + name, '12px arial');
 
-
-              if (this.getTextWidth(text + name, '12px arial') + 15 >= maxWidth) {
-                text += '... (' + (list.length - counter) + ' more)';
+              if (textWidth  >= maxWidth) {
+                text += name;
+                text = text.substring(0,this.getMaxCharacters(text,maxWidth - (list.length > 1 ? 65 : 10), textWidth)).trim();
+                text += list.length > 1  ? '...(' + (list.length - counter) + ' more)' : '...';
                 return false;
               }
 
               if (counter > 0) {
-                text += ',';
+                text += ' ,';
               }
 
-              text += name + ' ';
+              text += name;
 
               counter = counter + 1;
               return true;
@@ -211,6 +213,24 @@
 
             return text;
         };
+
+        this.getTooltipText = function(list){
+            var text = '';
+
+            if(list && list.length > 0) {
+              text += '<div class="tooltip-text"><ul>';
+
+              list.forEach(item=>{
+                text += "<li>"
+                text += item.name;
+                text += "</li>"
+              })
+
+              text += '</ul></div>';
+            }
+
+            return text;
+        }
 
         this.getTextWidth = function(text, font) {
           // re-use canvas object for better performance
@@ -221,6 +241,10 @@
           return metrics.width;
         };
 
+        this.getMaxCharacters = function(text, maxWidth, currentWidth){
+            var charWidth = currentWidth / text.length;
+            return maxWidth / charWidth;
+        }
       });
 
   uiscb.directive('uiCheckboxSelectChoices',
@@ -322,8 +346,8 @@
    * put as much logic in the controller (instead of the link functions) as possible so it can be easily tested.
    */
   uiscb.controller('uiCheckboxSelectCtrl',
-      ['$scope', '$element', '$timeout', '$filter', 'uiscbRepeatParser', 'uiSelectMinErr', 'uiCheckboxSelectConfig', '$parse', '$injector',
-        function($scope, $element, $timeout, $filter, RepeatParser, uiSelectMinErr, uiCheckboxSelectConfig, $parse, $injector) {
+      ['$scope', '$element', '$timeout', '$filter', 'uiscbRepeatParser', 'uiSelectMinErr', 'uiCheckboxSelectConfig', '$parse', '$injector','textService',
+        function($scope, $element, $timeout, $filter, RepeatParser, uiSelectMinErr, uiCheckboxSelectConfig, $parse, $injector, textService) {
 
           var ctrl = this;
 
@@ -423,6 +447,7 @@
 
           // When the user clicks on ui-checkbox-select, displays the dropdown list
           ctrl.activate = function(initSearchValue, avoidReset) {
+
             if (!ctrl.disabled  && !ctrl.open) {
               if(!avoidReset) _resetSearchInput();
 
@@ -735,6 +760,13 @@
             });
 
           };
+
+          ctrl.showTooltipText = function(){
+
+            if(ctrl.searchInput.attr('placeholder').indexOf('...') != -1) {
+              return textService.getTooltipText(ctrl.selected);
+            }
+          }
 
           ctrl.setFocus = function(){
             if (!ctrl.focus) ctrl.focusInput[0].focus();
@@ -1509,9 +1541,11 @@
             $select.initalModel = newValue;
           }
 
-          $timeout(function(){
-            $select.searchInput.attr('placeholder',textService.getTruncedText($select.selected, $select.searchInput.width() - 10));
-          })
+          if($select.selected.length > 0) {
+            $timeout(function () {
+              $select.searchInput.attr('placeholder', textService.getTruncedText($select.selected, $select.searchInput.width() - 10));
+            })
+          }
         });
 
         ngModel.$render = function() {
@@ -2129,14 +2163,10 @@ angular.module("multi-checkbox-select").run(["$templateCache", function($templat
   $templateCache.put("select2/checkbox-choices.tpl.html","<ul class=\"ui-checkbox-select-choices ui-checkbox-select-choices-content select2-results\"><li class=\"ui-checkbox-select-choices-group\" ng-class=\"{\'select2-result-with-children\': $select.choiceGrouped($group) }\"><div ng-show=\"$select.choiceGrouped($group)\" class=\"ui-checkbox-select-choices-group-label select2-result-label\" ng-bind=\"$group.name\"></div><ul role=\"listbox\" id=\"ui-checkbox-select-choices-{{ $select.generatedId }}\" ng-class=\"{\'select2-result-sub\': $select.choiceGrouped($group), \'select2-result-single\': !$select.choiceGrouped($group) }\"><li role=\"option\" id=\"ui-checkbox-select-choices-row-{{ $select.generatedId }}-{{$index}}\" class=\"ui-checkbox-select-choices-row\" ng-class=\"{\'select2-highlighted\': $select.isActive(this), \'select2-disabled\': $select.isDisabled(this)}\"><div class=\"select2-result-label ui-checkbox-select-choices-row-inner\"><input type='checkbox'></div></li></ul></li></ul>");
 
   $templateCache.put("select2/checkbox-match-multiple.tpl.html",'<span></span>');
-  //    "<span class=\"ui-checkbox-select-match select2-search-choice\" uiscb-transclude-append=\"\" ng-repeat=\"$item in $select.selected\">" +
-  //      "<!--li class=\"ui-checkbox-select-match-item select2-search-choice\" ng-repeat=\"$item in $select.selected\" ng-class=\"{\'select2-search-choice-focus\':$selectMultiple.activeMatchIndex === $index, \'select2-locked\':$select.isLocked(this, $index)}\" ui-checkbox-select-sort=\"$select.selected\">" +
-  //        "<span uiscb-transclude-append=\"\"></span> " +
-  //      "</li-->" +
-  //    "</span>");
+
 
   $templateCache.put("select2/checkbox-match.tpl.html","<a class=\"select2-choice ui-checkbox-select-match\" ng-class=\"{\'select2-default\': $select.isEmpty()}\" ng-click=\"$select.toggle($event)\" aria-label=\"{{ $select.baseTitle }} select\"><span ng-show=\"$select.isEmpty()\" class=\"select2-chosen\">{{$select.placeholder}}</span> <span ng-hide=\"$select.isEmpty()\" class=\"select2-chosen\" ng-transclude=\"\"></span> <abbr ng-if=\"$select.allowClear && !$select.isEmpty()\" class=\"select2-search-choice-close\" ng-click=\"$select.clear($event)\"></abbr> <span class=\"select2-arrow ui-checkbox-select-toggle\"><b></b></span></a>");
-  $templateCache.put("select2/checkbox-select-multiple.tpl.html","<div class=\"ui-checkbox-select-container ui-checkbox-select-multiple select2 select2-container select2-container-multi\" ng-class=\"{\'select2-container-active select2-dropdown-open open\': $select.open, \'select2-container-disabled\': $select.disabled}\"><ul class=\"select2-choices\"><span class=\"ui-checkbox-select-match\"></span><li class=\"select2-search-field\"><input type=\"text\" autocomplete=\"false\" autocorrect=\"off\" autocapitalize=\"off\" spellcheck=\"false\" role=\"combobox\" aria-expanded=\"true\" aria-owns=\"ui-checkbox-select-choices-{{ $select.generatedId }}\" aria-label=\"{{ $select.baseTitle }}\" aria-activedescendant=\"ui-checkbox-select-choices-row-{{ $select.generatedId }}-{{ $select.activeIndex }}\" class=\"select2-input ui-checkbox-select-search\" placeholder=\"{{$selectMultiple.getPlaceholder()}}\" ng-disabled=\"$select.disabled\" ng-hide=\"$select.disabled\" ng-model=\"$select.search\" ng-click=\"$select.activate()\" style=\"width: 34px;\" ondrop=\"return false;\"></li></ul><div class=\"ui-checkbox-select-dropdown select2-drop select2-with-searchbox select2-drop-active\" ng-class=\"{\'select2-display-none\': !$select.open}\"><div class=\"ui-checkbox-select-choices\"></div></div></div>");
+  $templateCache.put("select2/checkbox-select-multiple.tpl.html","<div tooltip-html-unsafe=\"{{$select.showTooltipText()}}\" tooltip-placement=\"right\" tooltip-popup-delay=\"500\" class=\"ui-checkbox-select-container ui-checkbox-select-multiple select2 select2-container select2-container-multi\" ng-class=\"{\'select2-container-active select2-dropdown-open open\': $select.open, \'select2-container-disabled\': $select.disabled}\"><ul class=\"select2-choices\"><span class=\"ui-checkbox-select-match\"></span><li class=\"select2-search-field\"><input type=\"text\" autocomplete=\"false\" autocorrect=\"off\" autocapitalize=\"off\" spellcheck=\"false\" role=\"combobox\" aria-expanded=\"true\" aria-owns=\"ui-checkbox-select-choices-{{ $select.generatedId }}\" aria-label=\"{{ $select.baseTitle }}\" aria-activedescendant=\"ui-checkbox-select-choices-row-{{ $select.generatedId }}-{{ $select.activeIndex }}\" class=\"select2-input ui-checkbox-select-search\" placeholder=\"{{$selectMultiple.getPlaceholder()}}\" ng-disabled=\"$select.disabled\" ng-hide=\"$select.disabled\" ng-model=\"$select.search\" ng-click=\"$select.activate()\" style=\"width: 34px;\" ondrop=\"return false;\"></li></ul><div class=\"ui-checkbox-select-dropdown select2-drop select2-with-searchbox select2-drop-active\" ng-class=\"{\'select2-display-none\': !$select.open}\"><div class=\"ui-checkbox-select-choices\"></div></div></div>");
   $templateCache.put("select2/checkbox-select.tpl.html","<div class=\"ui-checkbox-select-container select2 select2-container\" ng-class=\"{\'select2-container-active select2-dropdown-open open\': $select.open, \'select2-container-disabled\': $select.disabled, \'select2-container-active\': $select.focus, \'select2-allowclear\': $select.allowClear && !$select.isEmpty()}\"><div class=\"ui-checkbox-select-match\"></div><div class=\"ui-checkbox-select-dropdown select2-drop select2-with-searchbox select2-drop-active\" ng-class=\"{\'select2-display-none\': !$select.open}\"><div class=\"select2-search\" ng-show=\"$select.searchEnabled\"><input type=\"text\" autocomplete=\"false\" autocorrect=\"false\" autocapitalize=\"off\" spellcheck=\"false\" role=\"combobox\" aria-expanded=\"true\" aria-owns=\"ui-checkbox-select-choices-{{ $select.generatedId }}\" aria-label=\"{{ $select.baseTitle }}\" aria-activedescendant=\"ui-checkbox-select-choices-row-{{ $select.generatedId }}-{{ $select.activeIndex }}\" class=\"ui-checkbox-select-search select2-input\" ng-model=\"$select.search\"></div><div class=\"ui-checkbox-select-choices\"></div></div></div>");
   $templateCache.put("selectize/checkbox-choices.tpl.html","<div ng-show=\"$select.open\" class=\"ui-checkbox-select-choices ui-checkbox-select-dropdown selectize-dropdown single\"><div class=\"ui-checkbox-select-choices-content selectize-dropdown-content\"><div class=\"ui-checkbox-select-choices-group optgroup\" role=\"listbox\"><div ng-show=\"$select.isGrouped\" class=\"ui-checkbox-select-choices-group-label optgroup-header\" ng-bind=\"$group.name\"></div><div role=\"option\" class=\"ui-checkbox-select-choices-row\" ng-class=\"{active: $select.isActive(this), disabled: $select.isDisabled(this)}\"><div class=\"option ui-checkbox-select-choices-row-inner\" data-selectable=\"\"></div></div></div></div></div>");
   $templateCache.put("selectize/checkbox-match.tpl.html","<div ng-hide=\"($select.open || $select.isEmpty())\" class=\"ui-checkbox-select-match\" ng-transclude=\"\"></div>");
