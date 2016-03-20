@@ -186,16 +186,17 @@
       .service('textService',function(){
 
         this.getTruncedText = function(list, maxWidth) {
-            let text = '',
-                counter = 0;
+            var text = '',
+                counter = 0,
+                self = this;
 
-            list.every(item=> {
-              let name = item.name;
-              let textWidth = this.getTextWidth(text + name, '12px arial');
+            list.every(function(item){
+              var name = item.name;
+              var textWidth = self.getTextWidth(text + name, '12px arial');
 
               if (textWidth  >= maxWidth) {
                 text += name;
-                text = text.substring(0,this.getMaxCharacters(text,maxWidth - (list.length > 1 ? 65 : 10), textWidth)).trim();
+                text = text.substring(0,self.getMaxCharacters(text,maxWidth - (list.length > 1 ? 65 : 10), textWidth)).trim();
                 text += list.length > 1  ? '...(' + (list.length - counter) + ' more)' : '...';
                 return false;
               }
@@ -220,7 +221,7 @@
             if(list && list.length > 0) {
               text += '<div class="tooltip-text"><ul>';
 
-              list.forEach(item=>{
+              list.forEach(function(item){
                 text += "<li>"
                 text += item.name;
                 text += "</li>"
@@ -304,16 +305,16 @@
                 var cbsInner = rowsInner.querySelectorAll('input[type=checkbox]');
                 cbsInner.attr('ng-checked','$select.selected.includes(' + $select.parserResult.itemName + ')');
 
-                let footerElm = element.parent().append("<div></div>");
-                let selectAllElm = footerElm.append("<a>Select All</a>");
+                var footerElm = element.parent().append("<div></div>");
+                var selectAllElm = footerElm.append("<a>Select All</a>");
                 selectAllElm.find('a').attr('ng-click','$select.selectAll()');
 
                 footerElm.append('<span> / </span>');
 
-                let clearElm = footerElm.append("<a>Clear</a>");
+                var clearElm = footerElm.append("<a>Clear</a>");
                 clearElm.find('a').eq(1).attr('ng-click','$select.clearAll()');
 
-                let applyElm = footerElm.append("<button class='btn ui-checkbox-select-choices-apply-button'>Apply</button>")
+                var applyElm = footerElm.append("<button class='btn ui-checkbox-select-choices-apply-button'>Apply</button>")
                 applyElm.find('button').attr('ng-click','$select.apply()');
                 $compile(element.parent(), transcludeFn)(scope);
 
@@ -704,11 +705,11 @@
 
 
           ctrl.selectAll = function(){
-            let _filteredItems = $parse(this.filteredItems)($scope);
+            var _filteredItems = $parse(this.filteredItems)($scope);
 
-            _filteredItems.forEach(item=>{
-              if(!this.selected.includes(item)) {
-                this.selected.push(item);
+            _filteredItems.forEach(function(item){
+              if(!ctrl.selected.includes(item)) {
+                ctrl.selected.push(item);
               }
             })
 
@@ -716,12 +717,12 @@
           }
 
           ctrl.clearAll = function(){
-            let _filteredItems = $parse(this.filteredItems)($scope),
+            var _filteredItems = $parse(this.filteredItems)($scope),
                 index;
 
-            _filteredItems.forEach(item=>{
-              index = this.selected.indexOf(item);
-              this.selected.splice(index, 1);
+            _filteredItems.forEach(function(item){
+              index = ctrl.selected.indexOf(item);
+              ctrl.selected.splice(index, 1);
             });
             $scope.$broadcast('uiscb:updateModel');
           }
