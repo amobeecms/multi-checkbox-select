@@ -276,3 +276,27 @@ body > .ui-checkbox-select-bootstrap.open {
     color: #ffffff;
     background-color: #159bb5;
 }
+
+.tooltip{
+
+    z-index: 19999 !important;
+
+}
+
+.tooltip .tooltip-inner{
+    max-width:40rem;
+    padding:10px;
+    z-index: 19999;
+}
+
+.tooltip .tooltip-inner div.tooltip-text ul{
+
+   padding:0;
+   margin: 0;
+}
+
+.tooltip .tooltip-inner div.tooltip-text ul li{
+
+    white-space: nowrap;
+    text-align: left;
+}
