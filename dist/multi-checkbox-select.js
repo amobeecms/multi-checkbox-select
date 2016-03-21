@@ -305,17 +305,26 @@
                 var cbsInner = rowsInner.querySelectorAll('input[type=checkbox]');
                 cbsInner.attr('ng-checked','$select.selected.includes(' + $select.parserResult.itemName + ')');
 
-                var footerElm = element.parent().append("<div></div>");
-                var selectAllElm = footerElm.append("<a>Select All</a>");
+                var footerElm = angular.element("<div class='ui-checkbox-select-choices-footer'></div>")
+                element.parent().append(footerElm)
+
+                var leftSectionWrapperElm = angular.element("<div class='ui-checkbox-left-section-wrapper'></div>")
+                footerElm.append(leftSectionWrapperElm);
+
+                var selectAllElm = leftSectionWrapperElm.append("<a>Select All</a>");
                 selectAllElm.find('a').attr('ng-click','$select.selectAll()');
 
-                footerElm.append('<span> / </span>');
+                leftSectionWrapperElm.append('<span> / </span>');
 
-                var clearElm = footerElm.append("<a>Clear</a>");
+                var clearElm = leftSectionWrapperElm.append("<a>Clear</a>");
                 clearElm.find('a').eq(1).attr('ng-click','$select.clearAll()');
 
-                var applyElm = footerElm.append("<button class='btn ui-checkbox-select-choices-apply-button'>Apply</button>")
+
+
+
+                var applyElm = footerElm.append("<button class='btn btn-primary ui-checkbox-select-choices-apply-button'>Apply</button>")
                 applyElm.find('button').attr('ng-click','$select.apply()');
+
                 $compile(element.parent(), transcludeFn)(scope);
 
                 scope.$watch('$select.search', function(newValue) {
@@ -688,7 +697,7 @@
                   }
                 }
 
-                $scope.$broadcast('uiscb:select', item);
+                $scope.$broadcast('uiscb:select', item, $event);
 
                 var locals = {};
                 locals[ctrl.parserResult.itemName] = item;
@@ -770,7 +779,11 @@
           }
 
           ctrl.setFocus = function(){
-            if (!ctrl.focus) ctrl.focusInput[0].focus();
+
+            if (!ctrl.focus){
+              alert('a')
+              ctrl.focusInput[0].focus();
+            }
           };
 
           ctrl.clear = function($event) {
@@ -993,8 +1006,8 @@
         }]);
 
   uiscb.directive('uiCheckboxSelect',
-      ['$document', 'uiCheckboxSelectConfig', 'uiSelectMinErr', 'uisOffset', '$compile', '$parse', '$timeout',
-        function($document, uiCheckboxSelectConfig, uiSelectMinErr, uisOffset, $compile, $parse, $timeout) {
+      ['$document', 'uiCheckboxSelectConfig', 'uiSelectMinErr', 'uisOffset', '$compile', '$parse', '$timeout','textService',
+        function($document, uiCheckboxSelectConfig, uiSelectMinErr, uisOffset, $compile, $parse, $timeout, textService) {
 
           return {
             restrict: 'EA',
@@ -1027,10 +1040,22 @@
               if (tAttrs.inputId)
                 tElement.querySelectorAll('input.ui-checkbox-select-search')[0].id = tAttrs.inputId;
 
+
               return function(scope, element, attrs, ctrls, transcludeFn) {
 
                 var $select = ctrls[0];
                 var ngModel = ctrls[1];
+                var seachInput = $select.searchInput;
+
+                //on focus remove the  'All' placeholder and set the value passed in the scope
+                seachInput.on('focus', function(){
+
+                    seachInput.attr('placeholder', attrs.placeHolder).addClass('focus')
+
+                }).on('blur', function(){
+
+                    seachInput.attr('placeholder', textService.getTruncedText($select.selected, $select.searchInput.width() - 10)).removeClass('focus')
+                });
 
                 $select.generatedId = uiCheckboxSelectConfig.generateId();
                 $select.baseTitle = attrs.title || 'Select box';
@@ -1563,15 +1588,17 @@
           scope.$evalAsync(); //To force $digest
         };
 
-        scope.$on('uiscb:select', function (event, item) {
+        scope.$on('uiscb:select', function (event, item, $event) {
           if($select.selected.length >= $select.limit) {
             return;
           }
           if(!$select.selected.includes(item)) {
             $select.selected.push(item);
             $selectMultiple.updateModel();
+            //$event.currentTarget.style.fontWeight = 'bold'
           }else{
             $selectMultiple.removeChoice($select.selected.indexOf(item));
+            //$event.currentTarget.style.fontWeight = 'normal'
           }
         });
 
