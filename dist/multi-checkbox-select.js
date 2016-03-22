@@ -773,9 +773,9 @@
 
           ctrl.showTooltipText = function(){
 
-            if(ctrl.searchInput.attr('placeholder').indexOf('...') != -1) {
+            //if(ctrl.searchInput.attr('placeholder').indexOf('...') != -1) {
               return textService.getTooltipText(ctrl.selected);
-            }
+            //}
           }
 
           ctrl.setFocus = function(){
@@ -1047,15 +1047,20 @@
                 var ngModel = ctrls[1];
                 var seachInput = $select.searchInput;
 
-                //on focus remove the  'All' placeholder and set the value passed in the scope
-                seachInput.on('focus', function(){
 
-                    seachInput.attr('placeholder', attrs.placeHolder).addClass('focus')
-
-                }).on('blur', function(){
-
-                    seachInput.attr('placeholder', textService.getTruncedText($select.selected, $select.searchInput.width() - 10)).removeClass('focus')
+                $timeout(function() {
+                  seachInput.attr('placeholder', attrs.placeHolder).addClass('focus')
                 });
+
+                //////on focus remove the  'All' placeholder and set the value passed in the scope
+                //seachInput.on('focus', function(){
+                //
+                //    seachInput.attr('placeholder', attrs.placeHolder);
+                //
+                //}).on('blur', function(){
+                //    seachInput.attr('placeholder', attrs.placeHolder);//.addClass('focus')
+                //    //seachInput.attr('placeholder', textService.getTruncedText($select.selected, $select.searchInput.width() - 10)).removeClass('focus')
+                //});
 
                 $select.generatedId = uiCheckboxSelectConfig.generateId();
                 $select.baseTitle = attrs.title || 'Select box';
@@ -1397,9 +1402,9 @@
       },
       link: function(scope, element, attrs, $select) {
         $select.lockChoiceExpression = attrs.uiLockChoice;
-        attrs.$observe('placeholder', function(placeholder) {
-          $select.placeholder = placeholder !== undefined ? placeholder : uiCheckboxSelectConfig.placeholder;
-        });
+        //attrs.$observe('placeholder', function(placeholder) {
+        //  $select.placeholder = placeholder !== undefined ? placeholder : uiCheckboxSelectConfig.placeholder;
+        //});
 
         function setAllowClear(allow) {
           $select.allowClear = (angular.isDefined(allow)) ? (allow === '') ? true : (allow.toLowerCase() === 'true') : false;
@@ -1567,11 +1572,11 @@
             $select.initalModel = newValue;
           }
 
-          if($select.selected.length > 0) {
-            $timeout(function () {
-              $select.searchInput.attr('placeholder', textService.getTruncedText($select.selected, $select.searchInput.width() - 10));
-            })
-          }
+          //if($select.selected.length > 0) {
+          //  $timeout(function () {
+          //    $select.searchInput.attr('placeholder', textService.getTruncedText($select.selected, $select.searchInput.width() - 10));
+          //  })
+          //}
         });
 
         ngModel.$render = function() {
