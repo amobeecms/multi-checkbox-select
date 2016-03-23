@@ -269,8 +269,8 @@ body > .ui-checkbox-select-bootstrap.open {
     background-color: #eeeeef;
     font-size: 13px;
     height: 34px;
-    padding-top:4px;
-    border-top: 1px solid #5897fb;
+    padding-top:5px;
+    //border-top: 1px solid #5897fb;
 }
 
 .ui-checkbox-select-choices-apply-button{
