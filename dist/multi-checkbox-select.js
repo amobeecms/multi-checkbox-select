@@ -1,7 +1,7 @@
 /*!
  * multi-checkbox-select
  * https://github.com/Avien/multi-checkbox-select
- * Version: 0.0.1 - 2016-03-13
+ * Version: 0.0.3 - 2016-03-29
  * License: MIT
  * Forked: Avien
  */
@@ -100,6 +100,13 @@
   }
 
   var latestId = 0;
+
+  var groupBySelected = function(item, selected){
+
+    if(selected.includes(item)){
+      return '';
+    }
+  }
 
   var uiscb = angular.module('multi-checkbox-select', ['ui.bootstrap'])
 
@@ -273,8 +280,9 @@
               return function link(scope, element, attrs, $select, transcludeFn) {
 
                 // var repeat = RepeatParser.parse(attrs.repeat);
-                var groupByExp = attrs.groupBy;
-                var groupFilterExp = attrs.groupFilter;
+
+                var groupByExp = groupBySelected;
+                var groupFilterExp = attrs.groupFilter //attrs.groupBy;
 
                 $select.parseRepeatAttr(attrs.repeat, groupByExp, groupFilterExp); //Result ready at $select.parserResult
 
@@ -319,9 +327,6 @@
                 var clearElm = leftSectionWrapperElm.append("<a>Clear</a>");
                 clearElm.find('a').eq(1).attr('ng-click','$select.clearAll()');
 
-
-
-
                 var applyElm = footerElm.append("<button class='btn btn-primary ui-checkbox-select-choices-apply-button'>Apply</button>")
                 applyElm.find('button').attr('ng-click','$select.apply()');
 
@@ -342,8 +347,6 @@
                   var refreshDelay = scope.$eval(attrs.refreshDelay);
                   $select.refreshDelay = refreshDelay !== undefined ? refreshDelay : uiCheckboxSelectConfig.refreshDelay;
                 });
-
-
               };
             }
           };
@@ -492,23 +495,34 @@
 
           ctrl.parseRepeatAttr = function(repeatAttr, groupByExp, groupFilterExp) {
             function updateGroups(items) {
-              var groupFn = $scope.$eval(groupByExp);
+              var groupFn = groupByExp;
               ctrl.groups = [];
-              angular.forEach(items, function(item) {
-                var groupName = angular.isFunction(groupFn) ? groupFn(item) : item[groupFn];
+              var filteredItems = $parse(ctrl.filteredItems)($scope);
+
+              angular.forEach(filteredItems, function (item) {
+                var groupName = angular.isFunction(groupFn) ? groupFn(item, ctrl.selected) : item[groupFn];
                 var group = ctrl.findGroupByName(groupName);
-                if(group) {
-                  group.items.push(item);
+                if (group) {
+                  if(group.name != null || (group.name == null && items.includes(item))) {
+                    group.items.push(item);
+                  }
                 }
                 else {
+
                   ctrl.groups.push({name: groupName, items: [item]});
                 }
               });
-              if(groupFilterExp){
+
+
+              ctrl.groups.sort(function(a, b){
+                  return a.items.length - b.items.length;
+              });
+
+              if (groupFilterExp) {
                 var groupFilterFn = $scope.$eval(groupFilterExp);
-                if( angular.isFunction(groupFilterFn)){
+                if (angular.isFunction(groupFilterFn)) {
                   ctrl.groups = groupFilterFn(ctrl.groups);
-                } else if(angular.isArray(groupFilterFn)){
+                } else if (angular.isArray(groupFilterFn)) {
                   ctrl.groups = _groupsFilter(ctrl.groups, groupFilterFn);
                 }
               }
@@ -582,6 +596,7 @@
                 } else {
                   //Remove already selected items (ex: while searching)
                   //TODO Should add a test
+
                   ctrl.refreshItems(items);
                   ctrl.ngModel.$modelValue = null; //Force scope model value and ngModel value to be out of sync to re-run formatters
                   if(ctrl.search =="" && items != oldItems) { //don't broadcast the event while searching
@@ -738,6 +753,13 @@
 
           ctrl.apply = function(fromReset){
             $timeout(function(){
+              ctrl.groups[0].items = ctrl.selected;
+              ctrl.groups[0].items.sort(function(a, b) {
+                var textA = a.name.toUpperCase();
+                var textB = b.name.toUpperCase();
+                return (textA < textB) ? -1 : (textA > textB) ? 1 : 0;
+              });
+
               ctrl.onApplyCallback($scope);
             });
 
