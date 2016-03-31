@@ -1,7 +1,7 @@
 /*!
  * multi-checkbox-select
  * https://github.com/Avien/multi-checkbox-select
- * Version: 0.0.3 - 2016-03-29
+ * Version: 0.0.3 - 2016-03-31
  * License: MIT
  * Forked: Avien
  */
