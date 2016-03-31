@@ -103,6 +103,11 @@
 
   var groupBySelected = function(item, selected){
 
+    //selected.forEach(function(_item){
+    //      if(_item.id == item.id){
+    //        return '';
+    //      }
+    //    })
     if(selected.includes(item)){
       return '';
     }
@@ -460,6 +465,7 @@
 
           // When the user clicks on ui-checkbox-select, displays the dropdown list
           ctrl.activate = function(initSearchValue, avoidReset) {
+            $element.querySelectorAll('.ui-checkbox-select-choices-content').parent().show();
 
             if (!ctrl.disabled  && !ctrl.open) {
               if(!avoidReset) _resetSearchInput();
@@ -503,7 +509,7 @@
                 var groupName = angular.isFunction(groupFn) ? groupFn(item, ctrl.selected) : item[groupFn];
                 var group = ctrl.findGroupByName(groupName);
                 if (group) {
-                  if(group.name != null || (group.name == null && items.includes(item))) {
+                  if(group.name != null || (group.name == null && (filteredItems.length < 150 || items.includes(item)))) {
                     group.items.push(item);
                   }
                 }
@@ -752,18 +758,28 @@
           }
 
           ctrl.apply = function(fromReset){
-            $timeout(function(){
-              ctrl.groups[0].items = ctrl.selected;
-              ctrl.groups[0].items.sort(function(a, b) {
-                var textA = a.name.toUpperCase();
-                var textB = b.name.toUpperCase();
-                return (textA < textB) ? -1 : (textA > textB) ? 1 : 0;
+
+            if(!fromReset) {
+              $timeout(function () {
+                if (ctrl.groups.length > 1) { //if selected items exist then sort list when applyng
+
+                  ctrl.selected.forEach(item=>{
+                     if(!ctrl.groups[0].items.includes(item)){
+                       ctrl.groups[0].items.push(item);
+                       ctrl.groups[1].items.splice(ctrl.groups[1].items.indexOf(item),1);
+                     }
+                  })
+
+                  ctrl.groups[0].items.sort(function (a, b) {
+                    var textA = a.name.toUpperCase();
+                    var textB = b.name.toUpperCase();
+                    return (textA < textB) ? -1 : (textA > textB) ? 1 : 0;
+                  });
+                }
+                ctrl.onApplyCallback($scope);
               });
 
-              ctrl.onApplyCallback($scope);
-            });
-
-
+            }
             ctrl.close(false, true);
 
             if(!fromReset) {
@@ -790,6 +806,10 @@
             $timeout(function(){
               ctrl.onCloseCallback($scope);
             });
+
+            var content = $element.querySelectorAll('.ui-checkbox-select-choices-content');
+            content.parent().hide();
+            content[0].scrollTop = 0
 
           };
 
@@ -1473,6 +1493,10 @@
             ctrl.updateModel();
         });
 
+        //$scope.$on('reset',()=>{
+        //  console.log('reset')
+        //   $select.initalModel = null;
+        //})
 
         ctrl.refreshComponent = function(){
           //Remove already selected items
@@ -1590,8 +1614,10 @@
             //$selectMultiple.refreshComponent();
           }
 
-          if($select.initalModel == null){
+          if(newValue && newValue.length > 0 && $select.initalModel == null){
+            console.log('scope.$watchCollection')
             $select.initalModel = newValue;
+            $select.setItemsFn(newValue);
           }
 
           //if($select.selected.length > 0) {
