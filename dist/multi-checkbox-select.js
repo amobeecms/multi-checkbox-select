@@ -103,14 +103,18 @@
 
   var groupBySelected = function(item, selected){
 
+    return selected.find(function(_item){
+      return(_item.id === item.id)
+    }) ? '' : null;
+
     //selected.forEach(function(_item){
     //      if(_item.id == item.id){
     //        return '';
     //      }
     //    })
-    if(selected.includes(item)){
-      return '';
-    }
+    //if(selected.includes(item)){
+    //  return '';
+    //}
   }
 
   var uiscb = angular.module('multi-checkbox-select', ['ui.bootstrap'])
@@ -520,9 +524,10 @@
               });
 
 
-              ctrl.groups.sort(function(a, b){
-                  return a.items.length - b.items.length;
+              ctrl.groups.sort(function (a, b) {
+                return a.items.length - b.items.length;
               });
+
 
               if (groupFilterExp) {
                 var groupFilterFn = $scope.$eval(groupFilterExp);
@@ -604,9 +609,17 @@
                   //TODO Should add a test
 
                   ctrl.refreshItems(items);
-                  ctrl.ngModel.$modelValue = null; //Force scope model value and ngModel value to be out of sync to re-run formatters
+
                   if(ctrl.search =="" && items != oldItems) { //don't broadcast the event while searching
+
+                    if(!ctrl.searchFiltered && ctrl.ngModel.$modelValue && Array.isArray(ctrl.ngModel.$modelValue)) {
+                        ctrl.ngModel.$modelValue.length = 0;
+                    }
+
                     $scope.$emit('uiscb:filter');
+                    $timeout(function(){
+                      ctrl.initalModel = ctrl.ngModel.$modelValue;
+                    })
                   }
                 }
               }
@@ -761,6 +774,11 @@
 
             if(!fromReset) {
               $timeout(function () {
+
+                if(ctrl.groups && ctrl.groups.length == 1) {
+                  ctrl.setItemsFn(ctrl.groups[0].items);
+                }
+
                 if (ctrl.groups.length > 1) { //if selected items exist then sort list when applyng
 
                   ctrl.selected.forEach(item=>{
@@ -770,11 +788,31 @@
                      }
                   })
 
+                  let difference = ctrl.groups[0].items.filter(x => ctrl.selected.indexOf(x) == -1);
+
+
+                  difference.forEach(item=>{
+
+                    ctrl.groups[1].items.push(item);
+                    ctrl.groups[0].items.splice(ctrl.groups[0].items.indexOf(item),1);
+
+                  })
+
+
                   ctrl.groups[0].items.sort(function (a, b) {
                     var textA = a.name.toUpperCase();
                     var textB = b.name.toUpperCase();
                     return (textA < textB) ? -1 : (textA > textB) ? 1 : 0;
                   });
+
+                  if(difference.length > 0) {
+                    console.log(ctrl.groups[1].items.length)
+                    ctrl.groups[1].items.sort(function (a, b) {
+                      var textA = a.name.toUpperCase();
+                      var textB = b.name.toUpperCase();
+                      return (textA < textB) ? -1 : (textA > textB) ? 1 : 0;
+                    });
+                  }
                 }
                 ctrl.onApplyCallback($scope);
               });
@@ -783,6 +821,11 @@
             ctrl.close(false, true);
 
             if(!fromReset) {
+              if(ctrl.searchInput.val().trim() != ""){
+                ctrl.searchFiltered = true;
+              }else{
+                ctrl.searchFiltered = false;
+              }
               ctrl.initalModel = ctrl.ngModel.$modelValue;
             }
           }
@@ -1550,19 +1593,21 @@
         //Input that will handle focus
         $select.focusInput = $select.searchInput;
 
-        //From view --> model
-        ngModel.$parsers.unshift(function () {
-          var locals = {},
-              result,
-              resultMultiple = [];
-          for (var j = $select.selected.length - 1; j >= 0; j--) {
-            locals = {};
-            locals[$select.parserResult.itemName] = $select.selected[j];
-            result = $select.parserResult.modelMapper(scope, locals);
-            resultMultiple.unshift(result);
-          }
-          return resultMultiple;
-        });
+        //if($select.selected) {
+          //From view --> model
+          ngModel.$parsers.unshift(function () {
+            var locals = {},
+                result,
+                resultMultiple = [];
+            for (var j = $select.selected.length - 1; j >= 0; j--) {
+              locals = {};
+              locals[$select.parserResult.itemName] = $select.selected[j];
+              result = $select.parserResult.modelMapper(scope, locals);
+              resultMultiple.unshift(result);
+            }
+            return resultMultiple;
+          });
+        //}
 
         // From model --> view
         ngModel.$formatters.unshift(function (inputValue) {
@@ -1614,12 +1659,17 @@
             //$selectMultiple.refreshComponent();
           }
 
+         /* if($select.initalModel == null){
+            $select.initalModel = newValue;
+          }*/
+
           if(newValue && newValue.length > 0 && $select.initalModel == null){
             console.log('scope.$watchCollection')
             $select.initalModel = newValue;
-            $select.setItemsFn(newValue);
+            //if($select.groups && $select.groups.length == 1) {
+            //  $select.setItemsFn($select.groups[0].items, true);
+            //}
           }
-
           //if($select.selected.length > 0) {
           //  $timeout(function () {
           //    $select.searchInput.attr('placeholder', textService.getTruncedText($select.selected, $select.searchInput.width() - 10));
