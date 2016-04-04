@@ -1,7 +1,7 @@
 /*!
  * multi-checkbox-select
  * https://github.com/Avien/multi-checkbox-select
- * Version: 0.0.3 - 2016-03-31
+ * Version: 0.0.4 - 2016-04-04
  * License: MIT
  * Forked: Avien
  */
@@ -792,12 +792,9 @@
 
 
                   difference.forEach(item=>{
-
                     ctrl.groups[1].items.push(item);
                     ctrl.groups[0].items.splice(ctrl.groups[0].items.indexOf(item),1);
-
                   })
-
 
                   ctrl.groups[0].items.sort(function (a, b) {
                     var textA = a.name.toUpperCase();
@@ -853,7 +850,6 @@
             var content = $element.querySelectorAll('.ui-checkbox-select-choices-content');
             content.parent().hide();
             content[0].scrollTop = 0
-
           };
 
           ctrl.showTooltipText = function(){
@@ -1656,19 +1652,14 @@
         scope.$watchCollection(function(){ return ngModel.$modelValue; }, function(newValue, oldValue) {
           if (oldValue != newValue){
             ngModel.$modelValue = null; //Force scope model value and ngModel value to be out of sync to re-run formatters
-            //$selectMultiple.refreshComponent();
           }
-
-         /* if($select.initalModel == null){
-            $select.initalModel = newValue;
-          }*/
 
           if(newValue && newValue.length > 0 && $select.initalModel == null){
             console.log('scope.$watchCollection')
             $select.initalModel = newValue;
-            //if($select.groups && $select.groups.length == 1) {
-            //  $select.setItemsFn($select.groups[0].items, true);
-            //}
+            if($select.groups && $select.groups.length == 1) {
+              $select.setItemsFn($select.groups[0].items);
+            }
           }
           //if($select.selected.length > 0) {
           //  $timeout(function () {
