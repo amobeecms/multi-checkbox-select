@@ -524,10 +524,14 @@
               });
 
 
-              ctrl.groups.sort(function (a, b) {
-                return a.items.length - b.items.length;
-              });
-
+              if(ctrl.groups.length > 1){
+                if(ctrl.groups[0].name != ''){
+                  var selectedGroup =  ctrl.groups.pop();
+                  var unselectedGroup = ctrl.groups.pop();
+                  ctrl.groups.push(selectedGroup);
+                  ctrl.groups.push(unselectedGroup);
+                }
+              }
 
               if (groupFilterExp) {
                 var groupFilterFn = $scope.$eval(groupFilterExp);
