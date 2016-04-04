@@ -351,11 +351,11 @@
                   }
                 });
 
-                attrs.$observe('refreshDelay', function() {
-                  // $eval() is needed otherwise we get a string instead of a number
-                  var refreshDelay = scope.$eval(attrs.refreshDelay);
-                  $select.refreshDelay = refreshDelay !== undefined ? refreshDelay : uiCheckboxSelectConfig.refreshDelay;
-                });
+                //attrs.$observe('refreshDelay', function() {
+                //  // $eval() is needed otherwise we get a string instead of a number
+                //  var refreshDelay = scope.$eval(attrs.refreshDelay);
+                //  $select.refreshDelay = refreshDelay !== undefined ? refreshDelay : uiCheckboxSelectConfig.refreshDelay;
+                //});
               };
             }
           };
@@ -785,17 +785,16 @@
 
                 if (ctrl.groups.length > 1) { //if selected items exist then sort list when applyng
 
-                  ctrl.selected.forEach(item=>{
+                  ctrl.selected.forEach(function(item){
                      if(!ctrl.groups[0].items.includes(item)){
                        ctrl.groups[0].items.push(item);
                        ctrl.groups[1].items.splice(ctrl.groups[1].items.indexOf(item),1);
                      }
                   })
 
-                  let difference = ctrl.groups[0].items.filter(x => ctrl.selected.indexOf(x) == -1);
+                  var difference = ctrl.groups[0].items.filter(function(x){ return ctrl.selected.indexOf(x) == -1 });
 
-
-                  difference.forEach(item=>{
+                  difference.forEach(function(item){
                     ctrl.groups[1].items.push(item);
                     ctrl.groups[0].items.splice(ctrl.groups[0].items.indexOf(item),1);
                   })
@@ -1181,65 +1180,65 @@
                   });
                 }
 
-                scope.$watch('searchEnabled', function() {
-                  var searchEnabled = scope.$eval(attrs.searchEnabled);
-                  $select.searchEnabled = searchEnabled !== undefined ? searchEnabled : uiCheckboxSelectConfig.searchEnabled;
-                });
-
-                scope.$watch('sortable', function() {
-                  var sortable = scope.$eval(attrs.sortable);
-                  $select.sortable = sortable !== undefined ? sortable : uiCheckboxSelectConfig.sortable;
-                });
-
-                attrs.$observe('disabled', function() {
-                  // No need to use $eval() (thanks to ng-disabled) since we already get a boolean instead of a string
-                  $select.disabled = attrs.disabled !== undefined ? attrs.disabled : false;
-                });
-
-                attrs.$observe('resetSearchInput', function() {
-                  // $eval() is needed otherwise we get a string instead of a boolean
-                  var resetSearchInput = scope.$eval(attrs.resetSearchInput);
-                  $select.resetSearchInput = resetSearchInput !== undefined ? resetSearchInput : true;
-                });
-
-                attrs.$observe('paste', function() {
-                  $select.paste = scope.$eval(attrs.paste);
-                });
-
-                attrs.$observe('tagging', function() {
-                  if(attrs.tagging !== undefined)
-                  {
-                    // $eval() is needed otherwise we get a string instead of a boolean
-                    var taggingEval = scope.$eval(attrs.tagging);
-                    $select.tagging = {isActivated: true, fct: taggingEval !== true ? taggingEval : undefined};
-                  }
-                  else
-                  {
-                    $select.tagging = {isActivated: false, fct: undefined};
-                  }
-                });
-
-                attrs.$observe('taggingLabel', function() {
-                  if(attrs.tagging !== undefined )
-                  {
-                    // check eval for FALSE, in this case, we disable the labels
-                    // associated with tagging
-                    if ( attrs.taggingLabel === 'false' ) {
-                      $select.taggingLabel = false;
-                    }
-                    else
-                    {
-                      $select.taggingLabel = attrs.taggingLabel !== undefined ? attrs.taggingLabel : '(new)';
-                    }
-                  }
-                });
-
-                attrs.$observe('taggingTokens', function() {
-                  if (attrs.tagging !== undefined) {
-                    var tokens = attrs.taggingTokens !== undefined ? attrs.taggingTokens.split('|') : [',','ENTER'];
-                    $select.taggingTokens = {isActivated: true, tokens: tokens };
-                  }
-                });
+                //scope.$watch('searchEnabled', function() {
+                //  var searchEnabled = scope.$eval(attrs.searchEnabled);
+                //  $select.searchEnabled = searchEnabled !== undefined ? searchEnabled : uiCheckboxSelectConfig.searchEnabled;
+                //});
+                //
+                //scope.$watch('sortable', function() {
+                //  var sortable = scope.$eval(attrs.sortable);
+                //  $select.sortable = sortable !== undefined ? sortable : uiCheckboxSelectConfig.sortable;
+                //});
+                //
+                //attrs.$observe('disabled', function() {
+                //  // No need to use $eval() (thanks to ng-disabled) since we already get a boolean instead of a string
+                //  $select.disabled = attrs.disabled !== undefined ? attrs.disabled : false;
+                //});
+                //
+                //attrs.$observe('resetSearchInput', function() {
+                //  // $eval() is needed otherwise we get a string instead of a boolean
+                //  var resetSearchInput = scope.$eval(attrs.resetSearchInput);
+                //  $select.resetSearchInput = resetSearchInput !== undefined ? resetSearchInput : true;
+                //});
+                //
+                //attrs.$observe('paste', function() {
+                //  $select.paste = scope.$eval(attrs.paste);
+                //});
+                //
+                //attrs.$observe('tagging', function() {
+                //  if(attrs.tagging !== undefined)
+                //  {
+                //    // $eval() is needed otherwise we get a string instead of a boolean
+                //    var taggingEval = scope.$eval(attrs.tagging);
+                //    $select.tagging = {isActivated: true, fct: taggingEval !== true ? taggingEval : undefined};
+                //  }
+                //  else
+                //  {
+                //    $select.tagging = {isActivated: false, fct: undefined};
+                //  }
+                //});
+                //
+                //attrs.$observe('taggingLabel', function() {
+                //  if(attrs.tagging !== undefined )
+                //  {
+                //    // check eval for FALSE, in this case, we disable the labels
+                //    // associated with tagging
+                //    if ( attrs.taggingLabel === 'false' ) {
+                //      $select.taggingLabel = false;
+                //    }
+                //    else
+                //    {
+                //      $select.taggingLabel = attrs.taggingLabel !== undefined ? attrs.taggingLabel : '(new)';
+                //    }
+                //  }
+                //});
+                //
+                //attrs.$observe('taggingTokens', function() {
+                //  if (attrs.tagging !== undefined) {
+                //    var tokens = attrs.taggingTokens !== undefined ? attrs.taggingTokens.split('|') : [',','ENTER'];
+                //    $select.taggingTokens = {isActivated: true, tokens: tokens };
+                //  }
+                //});
 
                 //Automatically gets focus when loaded
                 if (angular.isDefined(attrs.autofocus)){
@@ -1595,19 +1594,22 @@
 
         //if($select.selected) {
           //From view --> model
+
           ngModel.$parsers.unshift(function () {
             var locals = {},
                 result,
                 resultMultiple = [];
-            for (var j = $select.selected.length - 1; j >= 0; j--) {
-              locals = {};
-              locals[$select.parserResult.itemName] = $select.selected[j];
-              result = $select.parserResult.modelMapper(scope, locals);
-              resultMultiple.unshift(result);
+            if($select.selected) {
+              for (var j = $select.selected.length - 1; j >= 0; j--) {
+                locals = {};
+                locals[$select.parserResult.itemName] = $select.selected[j];
+                result = $select.parserResult.modelMapper(scope, locals);
+                resultMultiple.unshift(result);
+              }
             }
             return resultMultiple;
           });
-        //}
+
 
         // From model --> view
         ngModel.$formatters.unshift(function (inputValue) {
