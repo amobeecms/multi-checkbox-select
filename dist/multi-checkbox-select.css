@@ -270,7 +270,7 @@ body > .ui-checkbox-select-bootstrap.open {
     font-size: 13px;
     height: 34px;
     padding-top:5px;
-    //border-top: 1px solid #5897fb;
+    /*border-top: 1px solid #5897fb;*/
 }
 
 .ui-checkbox-select-choices-apply-button{
@@ -283,6 +283,16 @@ body > .ui-checkbox-select-bootstrap.open {
     margin-right: 15px;
     border: none;
     color: #ffffff;
+}
+
+.ui-checkbox-select-choices-group:first-child{
+    background-color: #eeeeef;
+    border-bottom: 1px solid #dadada;
+}
+
+.ui-checkbox-select-choices-group:only-child{
+    background-color: inherit;
+    border-bottom: inherit;
 }
 
 .ui-checkbox-left-section-wrapper{
