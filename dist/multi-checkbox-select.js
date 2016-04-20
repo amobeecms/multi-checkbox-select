@@ -1,7 +1,7 @@
 /*!
  * multi-checkbox-select
  * https://github.com/Avien/multi-checkbox-select
- * Version: 0.0.4 - 2016-04-04
+ * Version: 0.0.4 - 2016-04-20
  * License: MIT
  * Forked: Avien
  */
@@ -102,6 +102,10 @@
   var latestId = 0;
 
   var groupBySelected = function(item, selected){
+
+    if(!selected){
+      return null;
+    }
 
     return selected.find(function(_item){
       return(_item.id === item.id)
@@ -531,6 +535,35 @@
                   ctrl.groups.push(selectedGroup);
                   ctrl.groups.push(unselectedGroup);
                 }
+
+                //set new item references to model after filter, if it sent a new list of items (ctrl.filteredItems)
+                if(ctrl.searchInput.val().trim() == "" && ctrl.groups[0].items.filter(function(x){ return ctrl.selected.indexOf(x) == -1 }).length > 0 /*!ctrl.groups[0].items.includes(ctrl.selected[0])*/){
+                  if(ctrl.ngModel.$modelValue){
+                    ctrl.ngModel.$modelValue.length = 0;
+                  }
+
+                  if(ctrl.selected){
+                    ctrl.selected.length = 0;
+                  }
+
+                  ctrl.groups[0].items.forEach(function(item){
+                    if(ctrl.selected && !ctrl.selected.includes(item)){
+                      ctrl.selected.push(item);
+                    }
+
+                    if(ctrl.ngModel.$modelValue && !ctrl.ngModel.$modelValue.includes(item)){
+                      ctrl.ngModel.$modelValue.push(item);
+                    }
+                  })
+                }
+              }else if(ctrl.searchInput.val().trim() == "" && (ctrl.groups.length == 0 || ctrl.groups[0].items.filter(function(x){ return ctrl.selected.indexOf(x) == -1 }).length > 0 /*!ctrl.groups[0].items.includes(ctrl.selected[0])*/)){
+                if(ctrl.ngModel.$modelValue){
+                  ctrl.ngModel.$modelValue.length = 0;
+                }
+
+                if(ctrl.selected){
+                  ctrl.selected.length = 0;
+                }
               }
 
               if (groupFilterExp) {
@@ -545,6 +578,8 @@
               ctrl.groups.forEach(function(group) {
                 ctrl.items = ctrl.items.concat(group.items);
               });
+
+              //ctrl.bindGrouping();
             }
 
             function setPlainItems(items) {
@@ -617,7 +652,8 @@
                   if(ctrl.search =="" && items != oldItems) { //don't broadcast the event while searching
 
                     if(!ctrl.searchFiltered && ctrl.ngModel.$modelValue && Array.isArray(ctrl.ngModel.$modelValue)) {
-                        ctrl.ngModel.$modelValue.length = 0;
+                     // $scope.$broadcast('uiscb:updateModel');
+                     //   /ctrl.ngModel.$modelValue.length = 0;
                     }
 
                     $scope.$emit('uiscb:filter');
@@ -781,39 +817,10 @@
 
                 if(ctrl.groups && ctrl.groups.length == 1) {
                   ctrl.setItemsFn(ctrl.groups[0].items);
-                }
+                }//else{
+                  ctrl.bindGrouping();
+                //}
 
-                if (ctrl.groups.length > 1) { //if selected items exist then sort list when applyng
-
-                  ctrl.selected.forEach(function(item){
-                     if(!ctrl.groups[0].items.includes(item)){
-                       ctrl.groups[0].items.push(item);
-                       ctrl.groups[1].items.splice(ctrl.groups[1].items.indexOf(item),1);
-                     }
-                  })
-
-                  var difference = ctrl.groups[0].items.filter(function(x){ return ctrl.selected.indexOf(x) == -1 });
-
-                  difference.forEach(function(item){
-                    ctrl.groups[1].items.push(item);
-                    ctrl.groups[0].items.splice(ctrl.groups[0].items.indexOf(item),1);
-                  })
-
-                  ctrl.groups[0].items.sort(function (a, b) {
-                    var textA = a.name.toUpperCase();
-                    var textB = b.name.toUpperCase();
-                    return (textA < textB) ? -1 : (textA > textB) ? 1 : 0;
-                  });
-
-                  if(difference.length > 0) {
-                    console.log(ctrl.groups[1].items.length)
-                    ctrl.groups[1].items.sort(function (a, b) {
-                      var textA = a.name.toUpperCase();
-                      var textB = b.name.toUpperCase();
-                      return (textA < textB) ? -1 : (textA > textB) ? 1 : 0;
-                    });
-                  }
-                }
                 ctrl.onApplyCallback($scope);
               });
 
@@ -854,6 +861,45 @@
             content.parent().hide();
             content[0].scrollTop = 0
           };
+
+          ctrl.bindGrouping = function(){
+
+            if((!ctrl.groups || ctrl.groups.length <= 1) && ctrl.ngModel.$modelValue && !ctrl.groups[0].items.includes(ctrl.selected[0])) {
+              ctrl.ngModel.$modelValue.length = 0;
+            }
+
+            if (ctrl.groups.length > 1) { //if selected items exist then sort list when applyng
+
+              ctrl.selected.forEach(function(item){
+                if(!ctrl.groups[0].items.includes(item)){
+                  ctrl.groups[0].items.push(item);
+                  ctrl.groups[1].items.splice(ctrl.groups[1].items.indexOf(item),1);
+                }
+              })
+
+              var difference = ctrl.groups[0].items.filter(function(x){ return ctrl.selected.indexOf(x) == -1 });
+
+              difference.forEach(function(item){
+                ctrl.groups[1].items.push(item);
+                ctrl.groups[0].items.splice(ctrl.groups[0].items.indexOf(item),1);
+              })
+
+              ctrl.groups[0].items.sort(function (a, b) {
+                var textA = a.name.toUpperCase();
+                var textB = b.name.toUpperCase();
+                return (textA < textB) ? -1 : (textA > textB) ? 1 : 0;
+              });
+
+              if(difference.length > 0) {
+                console.log(ctrl.groups[1].items.length)
+                ctrl.groups[1].items.sort(function (a, b) {
+                  var textA = a.name.toUpperCase();
+                  var textB = b.name.toUpperCase();
+                  return (textA < textB) ? -1 : (textA > textB) ? 1 : 0;
+                });
+              }
+            }
+          }
 
           ctrl.showTooltipText = function(){
 
@@ -1656,9 +1702,9 @@
 
         //Watch for external model changes
         scope.$watchCollection(function(){ return ngModel.$modelValue; }, function(newValue, oldValue) {
-          if (oldValue != newValue){
-            ngModel.$modelValue = null; //Force scope model value and ngModel value to be out of sync to re-run formatters
-          }
+          //if (oldValue != newValue){
+          //  ngModel.$modelValue = null; //Force scope model value and ngModel value to be out of sync to re-run formatters
+          //}
 
           if(newValue && newValue.length > 0 && $select.initalModel == null){
             console.log('scope.$watchCollection')
@@ -2290,7 +2336,7 @@ angular.module("multi-checkbox-select").run(["$templateCache", function($templat
 
   $templateCache.put("select2/checkbox-choices.tpl.html","<ul class=\"ui-checkbox-select-choices ui-checkbox-select-choices-content select2-results\"><li class=\"ui-checkbox-select-choices-group\" ng-class=\"{\'select2-result-with-children\': $select.choiceGrouped($group) }\"><div ng-show=\"$select.choiceGrouped($group)\" class=\"ui-checkbox-select-choices-group-label select2-result-label\" ng-bind=\"$group.name\"></div><ul role=\"listbox\" id=\"ui-checkbox-select-choices-{{ $select.generatedId }}\" ng-class=\"{\'select2-result-sub\': $select.choiceGrouped($group), \'select2-result-single\': !$select.choiceGrouped($group) }\"><li role=\"option\" id=\"ui-checkbox-select-choices-row-{{ $select.generatedId }}-{{$index}}\" class=\"ui-checkbox-select-choices-row\" ng-class=\"{\'select2-highlighted\': $select.isActive(this), \'select2-disabled\': $select.isDisabled(this)}\"><div class=\"select2-result-label ui-checkbox-select-choices-row-inner\"><input type='checkbox'></div></li></ul></li></ul>");
 
-  $templateCache.put("select2/checkbox-match-multiple.tpl.html",'<span></span>');
+  $templateCache.put("select2/checkbox-match-multiple.tpl.html",'<span class=\"ui-checkbox-select-match\"></span>');
 
 
   $templateCache.put("select2/checkbox-match.tpl.html","<a class=\"select2-choice ui-checkbox-select-match\" ng-class=\"{\'select2-default\': $select.isEmpty()}\" ng-click=\"$select.toggle($event)\" aria-label=\"{{ $select.baseTitle }} select\"><span ng-show=\"$select.isEmpty()\" class=\"select2-chosen\">{{$select.placeholder}}</span> <span ng-hide=\"$select.isEmpty()\" class=\"select2-chosen\" ng-transclude=\"\"></span> <abbr ng-if=\"$select.allowClear && !$select.isEmpty()\" class=\"select2-search-choice-close\" ng-click=\"$select.clear($event)\"></abbr> <span class=\"select2-arrow ui-checkbox-select-toggle\"><b></b></span></a>");
