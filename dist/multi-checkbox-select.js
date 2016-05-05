@@ -1,7 +1,7 @@
 /*!
  * multi-checkbox-select
  * https://github.com/Avien/multi-checkbox-select
- * Version: 0.0.5 - 2016-04-21
+ * Version: 0.0.5 - 2016-05-05
  * License: MIT
  * Forked: Avien
  */
@@ -1182,15 +1182,7 @@
                   seachInput.attr('placeholder', attrs.placeHolder).addClass('focus')
                 });
 
-                //////on focus remove the  'All' placeholder and set the value passed in the scope
-                //seachInput.on('focus', function(){
-                //
-                //    seachInput.attr('placeholder', attrs.placeHolder);
-                //
-                //}).on('blur', function(){
-                //    seachInput.attr('placeholder', attrs.placeHolder);//.addClass('focus')
-                //    //seachInput.attr('placeholder', textService.getTruncedText($select.selected, $select.searchInput.width() - 10)).removeClass('focus')
-                //});
+
 
                 $select.generatedId = uiCheckboxSelectConfig.generateId();
                 $select.baseTitle = attrs.title || 'Select box';
@@ -1208,6 +1200,23 @@
                 $select.onApplyCallback = $parse(attrs.onApply);
                 $select.onCloseCallback = $parse(attrs.onClose);
                 $select.filteredItems = attrs.filteredItems;
+                $select.selectedTextPlaceholder = attrs.selectedTextPlaceholder;
+                //console.log('selectedTextPlaceholder ' + !!$select.selectedTextPlaceholder);
+
+                if($select.selectedTextPlaceholder) {
+
+                  $select.placeHolder = attrs.placeHolder;
+
+                  ////on focus remove the  'All' placeholder and set the value passed in the scope
+                  seachInput.on('focus', function () {
+
+                    seachInput.attr('placeholder', attrs.placeHolder);
+
+                  }).on('blur', function () {
+                    //seachInput.attr('placeholder', attrs.placeHolder);//.addClass('focus')
+                    seachInput.attr('placeholder', textService.getTruncedText($select.selected, $select.searchInput.width() - 25)).removeClass('focus')
+                  });
+                }
 
                 //Limit the number of selections allowed
                 $select.limit = (angular.isDefined(attrs.limit)) ? parseInt(attrs.limit, 10) : undefined;
@@ -1713,11 +1722,18 @@
               $select.setItemsFn($select.groups[0].items);
             }
           }
-          //if($select.selected.length > 0) {
-          //  $timeout(function () {
-          //    $select.searchInput.attr('placeholder', textService.getTruncedText($select.selected, $select.searchInput.width() - 10));
-          //  })
-          //}
+          if($select.selectedTextPlaceholder ) {
+
+            if($select.selected.length > 0) {
+              $timeout(function () {
+                $select.searchInput.attr('placeholder', textService.getTruncedText($select.selected, $select.searchInput.width() - 25));
+              })
+            }else{
+              $timeout(function () {
+                $select.searchInput.attr('placeholder', $select.placeHolder);
+              })
+            }
+          }
         });
 
         ngModel.$render = function() {
