@@ -537,7 +537,7 @@
                 }
 
                 //set new item references to model after filter, if it sent a new list of items (ctrl.filteredItems)
-                if(ctrl.searchInput.val().trim() == "" && ctrl.groups[0].items.filter(function(x){ return ctrl.selected.indexOf(x) == -1 }).length > 0 /*!ctrl.groups[0].items.includes(ctrl.selected[0])*/){
+                if(ctrl.searchInput.val().trim() == "" && ctrl.selected.length > 0 && ctrl.groups[0].items.filter(function(x){ return ctrl.selected.indexOf(x) == -1 }).length > 0 /*!ctrl.groups[0].items.includes(ctrl.selected[0])*/){
                   if(ctrl.ngModel.$modelValue){
                     ctrl.ngModel.$modelValue.length = 0;
                   }
@@ -556,7 +556,7 @@
                     }
                   })
                 }
-              }else if(ctrl.searchInput.val().trim() == "" && (ctrl.groups.length == 0 || ctrl.groups[0].items.filter(function(x){ return ctrl.selected.indexOf(x) == -1 }).length > 0 /*!ctrl.groups[0].items.includes(ctrl.selected[0])*/)){
+              }else if(ctrl.searchInput.val().trim() == "" && (ctrl.groups.length == 0 || (ctrl.selected.length > 0 && ctrl.groups[0].items.filter(function(x){ return ctrl.selected.indexOf(x) == -1 }).length > 0) /*!ctrl.groups[0].items.includes(ctrl.selected[0])*/)){
                 if(ctrl.ngModel.$modelValue){
                   ctrl.ngModel.$modelValue.length = 0;
                 }
@@ -1751,18 +1751,20 @@
         };
 
         scope.$on('uiscb:select', function (event, item, $event) {
-          if($select.selected.length >= $select.limit) {
-            return;
+          if($select.selected) {
+              if ($select.selected.length >= $select.limit) {
+                return;
+              }
+              if (!$select.selected.includes(item)) {
+                $select.selected.push(item);
+                $selectMultiple.updateModel();
+                //$event.currentTarget.style.fontWeight = 'bold'
+              } else {
+                $selectMultiple.removeChoice($select.selected.indexOf(item));
+                //$event.currentTarget.style.fontWeight = 'normal'
+              }
           }
-          if(!$select.selected.includes(item)) {
-            $select.selected.push(item);
-            $selectMultiple.updateModel();
-            //$event.currentTarget.style.fontWeight = 'bold'
-          }else{
-            $selectMultiple.removeChoice($select.selected.indexOf(item));
-            //$event.currentTarget.style.fontWeight = 'normal'
-          }
-        });
+          });
 
         scope.$on('uiscb:activate', function () {
           $selectMultiple.activeMatchIndex = -1;
