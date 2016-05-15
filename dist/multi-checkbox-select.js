@@ -1,7 +1,7 @@
 /*!
  * multi-checkbox-select
  * https://github.com/Avien/multi-checkbox-select
- * Version: 0.0.5 - 2016-05-05
+ * Version: 0.0.6 - 2016-05-15
  * License: MIT
  * Forked: Avien
  */
@@ -556,7 +556,7 @@
                     }
                   })
                 }
-              }else if(ctrl.searchInput.val().trim() == "" && (ctrl.groups.length == 0 || (ctrl.selected.length > 0 && ctrl.groups[0].items.filter(function(x){ return ctrl.selected.indexOf(x) == -1 }).length > 0) /*!ctrl.groups[0].items.includes(ctrl.selected[0])*/)){
+              }else if(ctrl.searchInput.val().trim() == "" && (ctrl.groups.length == 0 || (ctrl.selected && ctrl.selected.length > 0 && ctrl.groups[0].items.filter(function(x){ return ctrl.selected.indexOf(x) == -1 }).length > 0) /*!ctrl.groups[0].items.includes(ctrl.selected[0])*/)){
                 if(ctrl.ngModel.$modelValue){
                   ctrl.ngModel.$modelValue.length = 0;
                 }
