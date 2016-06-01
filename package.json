@@ -4,9 +4,9 @@
   "author": {
     "name": "Avien"
   },
-  "homepage": "http://github.com/Avien/multi-checkbox-select",
+  "homepage": "http://github.com/amobeecms/multi-checkbox-select",
   "repository": {
-    "url": "git://github.com/Avien/multi-checkbox-select.git"
+    "url": "git://github.com/amobeecms/multi-checkbox-select.git"
   },
   "style": "dist/select.css",
   "version": "0.0.6",
